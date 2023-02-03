@@ -9,7 +9,7 @@ import (
 )
 
 // HandlerFuncConverter 将函数 f 转换为 Gin 的路由处理函数 HandlerFunc
-// f 应该是形如 func(...any) (...any, error) 的函数
+// f 应该是形如 func(...any) (...any, ...error) 的函数, 兼容 func(c *gin.Context)
 func HandlerFuncConverter(f any) gin.HandlerFunc {
 	// 0. 检查 f 是否是一个函数
 	var theF reflect.Value = reflect.ValueOf(f)
@@ -26,8 +26,10 @@ func HandlerFuncConverter(f any) gin.HandlerFunc {
 		params := make([]reflect.Value, paramNum)
 		for i := 0; i < paramNum; i++ {
 			var paramType reflect.Type = theF.Type().In(i)
-			switch paramType.Kind() {
-			case reflect.Struct:
+			switch {
+			case paramType == reflect.TypeOf((*gin.Context)(nil)):
+				params[i] = reflect.ValueOf(c)
+			case paramType.Kind() == reflect.Struct:
 				// 反射创建结构体
 				var param reflect.Value = reflect.New(paramType)
 
@@ -66,46 +68,66 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 	for i := 0; i < theStruct.NumField(); i++ {
 		var field reflect.StructField = theStruct.Type().Field(i)
 
-		// 依次从 [QueryString, 表单] 中取值
-		var val string
-		for _, tagName := range []string{"query", "from"} {
-			paramName := field.Tag.Get(tagName)
-			if paramName == "" {
-				continue
-			}
-
-			switch tagName {
-			case "query":
-				val = c.Query(paramName)
-			case "form":
-				val = c.PostForm(paramName)
-			default:
-			}
-
-			if val != "" {
-				break
-			}
-		}
-
-		if val == "" {
-			return
-		}
-
 		// 将值赋给对应的字段
 		switch field.Type {
 		case reflect.TypeOf(int(0)):
-			v, _ := strconv.ParseInt(val, 10, 64)
-			theStruct.FieldByName(field.Name).SetInt(v)
+			val, hasVal := fetchValue(field, c)
+			if hasVal {
+				v, _ := strconv.ParseInt(val, 10, 64)
+				theStruct.FieldByName(field.Name).SetInt(v)
+			}
 		case reflect.TypeOf(string("")):
-			theStruct.FieldByName(field.Name).SetString(val)
+			val, hasVal := fetchValue(field, c)
+			if hasVal {
+				theStruct.FieldByName(field.Name).SetString(val)
+			}
 		}
 	}
+}
+
+// fetchValue 依次从 [QueryString, 表单] 中取值
+func fetchValue(field reflect.StructField, c *gin.Context) (string, bool) {
+	var val = ""
+	for _, tagName := range []string{"query", "from"} {
+		paramName := field.Tag.Get(tagName)
+		if paramName == "" {
+			continue
+		}
+
+		switch tagName {
+		case "query":
+			val = c.Query(paramName)
+		case "form":
+			val = c.PostForm(paramName)
+		default:
+		}
+
+		if val != "" {
+			break
+		}
+	}
+
+	if val == "" {
+		return "", false
+	}
+	return val, true
 }
 
 // response
 // retValues 返回的值的列表
 // retTypeNameList 返回值的类型名称列表
+//
+//	  retValues 为空时, 表示不需要包装返回数据
+//	  retValues 为 (...error) 时,
+//	    当 error == nil, 写入 c.JSON(http.StatusOK, resp)
+//	    当 error != nil, 写入 {"status_msg":  errorList[i].Error()}
+//	  retValues 为 (...data, error) 时,
+//		   当 error == nil, 写入 {"data": data}
 func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []string) {
+	if len(retValues) == 0 {
+		return
+	}
+
 	// 1. 分离错误和有效数据
 	dataList := make([]struct {
 		name string
