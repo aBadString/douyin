@@ -104,22 +104,29 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 		case reflect.TypeOf(int(0)):
 			val, hasVal := fetchValue(field.Tag, c)
 			if hasVal {
-				v, _ := strconv.ParseInt(val, 10, 64)
-				theStruct.FieldByName(field.Name).SetInt(v)
+				switch val.(type) {
+				case int:
+					theStruct.FieldByName(field.Name).SetInt(int64(val.(int)))
+				case string:
+					v, _ := strconv.ParseInt(val.(string), 10, 64)
+					theStruct.FieldByName(field.Name).SetInt(v)
+				}
 			}
 		case reflect.TypeOf(string("")):
 			val, hasVal := fetchValue(field.Tag, c)
 			if hasVal {
-				theStruct.FieldByName(field.Name).SetString(val)
+				if v, ok := val.(string); ok {
+					theStruct.FieldByName(field.Name).SetString(v)
+				}
 			}
 		}
 	}
 }
 
 // fetchValue 依次从 [QueryString, 表单] 中取值
-func fetchValue(fieldTag reflect.StructTag, c *gin.Context) (string, bool) {
-	var val = ""
-	for _, tagName := range []string{"query", "from"} {
+func fetchValue(fieldTag reflect.StructTag, c *gin.Context) (any, bool) {
+	var val any = nil
+	for _, tagName := range []string{"query", "from", "context"} {
 		paramName := fieldTag.Get(tagName)
 		if paramName == "" {
 			continue
@@ -130,16 +137,18 @@ func fetchValue(fieldTag reflect.StructTag, c *gin.Context) (string, bool) {
 			val = c.Query(paramName)
 		case "form":
 			val = c.PostForm(paramName)
+		case "context":
+			val, _ = c.Get(paramName)
 		default:
 		}
 
-		if val != "" {
+		if val != nil {
 			break
 		}
 	}
 
-	if val == "" {
-		return "", false
+	if val == nil {
+		return nil, false
 	}
 	return val, true
 }

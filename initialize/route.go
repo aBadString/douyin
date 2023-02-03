@@ -18,12 +18,12 @@ func InitRouter(router gin.IRouter) {
 		//apiRouter.POST("/user/register/", service.Register)
 		apiRouter.POST("/user/login/", service.Login)
 
-		authRouter := apiRouter.Group("/", auth)
+		authRouter := apiRouter.Group("/", Auth)
 		{
 			// 基础接口
 			authRouter.GET("/user/", base.HandlerFuncConverter(service.UserInfo))
 			//authRouter.POST("/publish/action/",  base.HandlerFuncConverter(service.Publish))
-			//authRouter.GET("/publish/list/",  base.HandlerFuncConverter(service.PublishList))
+			authRouter.GET("/publish/list/", base.HandlerFuncConverter(service.PublishList))
 
 			// 互动接口
 			//authRouter.POST("/favorite/action/",  base.HandlerFuncConverter(service.FavoriteAction))
@@ -42,7 +42,7 @@ func InitRouter(router gin.IRouter) {
 	}
 }
 
-func auth(c *gin.Context) {
+func Auth(c *gin.Context) {
 	token := c.Query("token")
 	currentUserId, err := service.GetUserIdByToken(token)
 
