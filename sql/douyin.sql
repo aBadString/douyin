@@ -11,7 +11,7 @@ create table if not exists `video` (
     `author_id` int not null comment '视频作者, vFK(user.id)',
     `title` varchar(255) not null comment '视频标题',
     `data` varchar(255) not null comment '视频数据, 文件系统路径',
-    `cover` blob not null comment '视频封面图片',
+    `cover` varchar(255) not null comment '视频封面图片, 文件系统路径',
     `favorite_count` int default 0 comment '点赞总数, 定时从 `favorite` 中异步统计更新',
     `comment_count` int default 0 comment '评论总数, 定时从 `comment` 中异步统计更新',
     index(`author_id`) comment '发布列表, 列出用户所有投稿过的视频'
@@ -67,17 +67,17 @@ insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_coun
     values (4, 'TEST_song', '', 0, 2);
 
 insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (1, 1, 'TEST_aBadString_video_1', 'default.mp4', 0101);
+    values (1, 1, 'TEST_aBadString_video_1', 'default.mp4', 'default.png');
 insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (2, 1, 'TEST_aBadString_video_2', 'default.mp4', 0101);
+    values (2, 1, 'TEST_aBadString_video_2', 'default.mp4', 'default.png');
 insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (3, 1, 'TEST_aBadString_video_3', 'default.mp4', 0101);
+    values (3, 1, 'TEST_aBadString_video_3', 'default.mp4', 'default.png');
 insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (4, 2, 'TEST_peadx_video_1', 'default.mp4', 0101);
+    values (4, 2, 'TEST_peadx_video_1', 'default.mp4', 'default.png');
 insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (5, 2, 'TEST_peadx_video_2', 'default.mp4', 0101);
+    values (5, 2, 'TEST_peadx_video_2', 'default.mp4', 'default.png');
 insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (6, 2, 'TEST_peadx_video_3', 'default.mp4', 0101);
+    values (6, 2, 'TEST_peadx_video_3', 'default.mp4', 'default.png');
 
 insert into `relation` (`user_id`, `followed_user_id`) values (1, 2);
 insert into `relation` (`user_id`, `followed_user_id`) values (1, 3);
