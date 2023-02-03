@@ -53,3 +53,35 @@ create table if not exists `message` (
     index(`send_user_id`),
     index(`receive_user_id`)
 ) comment '用户-发消息-用户' engine=innodb default charset=utf8;
+
+
+# TEST DATA
+
+insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
+    values (1, 'TEST_aBadString', '', 3, 1);
+insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
+    values (2, 'TEST_peadx', '', 2, 1);
+insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
+    values (3, 'TEST_bin', '', 1, 2);
+insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
+    values (4, 'TEST_song', '', 0, 2);
+
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
+    values (1, 1, 'TEST_aBadString_video_1', 'default.mp4', 0101);
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
+    values (2, 1, 'TEST_aBadString_video_2', 'default.mp4', 0101);
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
+    values (3, 1, 'TEST_aBadString_video_3', 'default.mp4', 0101);
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
+    values (4, 2, 'TEST_peadx_video_1', 'default.mp4', 0101);
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
+    values (5, 2, 'TEST_peadx_video_2', 'default.mp4', 0101);
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
+    values (6, 2, 'TEST_peadx_video_3', 'default.mp4', 0101);
+
+insert into `relation` (`user_id`, `followed_user_id`) values (1, 2);
+insert into `relation` (`user_id`, `followed_user_id`) values (1, 3);
+insert into `relation` (`user_id`, `followed_user_id`) values (1, 4);
+insert into `relation` (`user_id`, `followed_user_id`) values (2, 1);
+insert into `relation` (`user_id`, `followed_user_id`) values (2, 3);
+insert into `relation` (`user_id`, `followed_user_id`) values (3, 4);
