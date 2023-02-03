@@ -9,7 +9,38 @@ import (
 )
 
 // HandlerFuncConverter 将函数 f 转换为 Gin 的路由处理函数 HandlerFunc
-// f 应该是形如 func(...any) (...any, ...error) 的函数, 兼容 func(c *gin.Context)
+// f 应该是形如 func(...any) (...any, ...error) 的函数, 兼容 func(c *gin.Context).
+//
+// 将向函数 f 中注入结构体类型参数的请求数据, 暂时不支持嵌套结构体. 结构体的属性仅支持 int 和 string.
+// 支持注入 Gin 上下文对象的指针 *gin.Context.
+//
+// 将对函数 f 的返回值进行包装, 并写入响应数据中.
+// 当 f 返回值列表为空时, 不进行返回值包装 (为兼容 func(c *gin.Context));
+// 当 f 返回值列表为 (error) 时, 根据 error 是否为 nil, 响应 200 或者 error message;
+// 一般的 f 返回值列表应是 (data1, data2, ..., error1, error2, ...):
+// 一旦存在 error 不为 nil, 返回格式如下:
+//
+//	{
+//	  "status_code": 500,
+//	  "status_msg": "error message"
+//	}
+//
+// 或者
+//
+//	{
+//	  "status_code": 500,
+//	  "status_msg": ["error message 1", "error message 2", ...]
+//	}
+//
+// 所有 error 都为 nil, 返回格式如下:
+//
+//	{
+//		"status_code": 0,
+//		"status_msg": "success",
+//		"data1": {...},
+//		"data2": {...},
+//		...
+//	}
 func HandlerFuncConverter(f any) gin.HandlerFunc {
 	// 0. 检查 f 是否是一个函数
 	var theF reflect.Value = reflect.ValueOf(f)
@@ -31,7 +62,7 @@ func HandlerFuncConverter(f any) gin.HandlerFunc {
 				params[i] = reflect.ValueOf(c)
 			case paramType.Kind() == reflect.Struct:
 				// 反射创建结构体
-				var param reflect.Value = reflect.New(paramType)
+				var param reflect.Value = reflect.New(paramType).Elem()
 
 				// 如果这里能获取到 param 所在结构体的原始指针就好了. 那就能直接复用 Gin 的 Bind 方法
 				// c.ShouldBind(param.ptr)
@@ -39,9 +70,9 @@ func HandlerFuncConverter(f any) gin.HandlerFunc {
 				//	jsonBody := make(map[string]any)
 				//	_ = c.ShouldBindJSON(&jsonBody)
 
-				bindStruct(param.Elem(), c)
+				bindStruct(param, c)
 
-				params[i] = param.Elem()
+				params[i] = param
 			}
 		}
 
@@ -55,8 +86,8 @@ func HandlerFuncConverter(f any) gin.HandlerFunc {
 		retTypeNameList := make([]string, 0, len(retValues))
 		retValuesNum := theF.Type().NumOut()
 		for i := 0; i < retValuesNum; i++ {
-			ret := theF.Type().Out(i)
-			retTypeNameList = append(retTypeNameList, ret.Name())
+			retType := theF.Type().Out(i)
+			retTypeNameList = append(retTypeNameList, retType.Name())
 		}
 		response(c, retValues, retTypeNameList)
 	}
@@ -71,13 +102,13 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 		// 将值赋给对应的字段
 		switch field.Type {
 		case reflect.TypeOf(int(0)):
-			val, hasVal := fetchValue(field, c)
+			val, hasVal := fetchValue(field.Tag, c)
 			if hasVal {
 				v, _ := strconv.ParseInt(val, 10, 64)
 				theStruct.FieldByName(field.Name).SetInt(v)
 			}
 		case reflect.TypeOf(string("")):
-			val, hasVal := fetchValue(field, c)
+			val, hasVal := fetchValue(field.Tag, c)
 			if hasVal {
 				theStruct.FieldByName(field.Name).SetString(val)
 			}
@@ -86,10 +117,10 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 }
 
 // fetchValue 依次从 [QueryString, 表单] 中取值
-func fetchValue(field reflect.StructField, c *gin.Context) (string, bool) {
+func fetchValue(fieldTag reflect.StructTag, c *gin.Context) (string, bool) {
 	var val = ""
 	for _, tagName := range []string{"query", "from"} {
-		paramName := field.Tag.Get(tagName)
+		paramName := fieldTag.Get(tagName)
 		if paramName == "" {
 			continue
 		}
