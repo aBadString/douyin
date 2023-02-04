@@ -131,10 +131,10 @@ func Publish(c *gin.Context, request PublishRequest) error {
 		return errors.New("视频上传出错")
 	}
 
-	filepath := time.Now().Format("20060102") + "_" +
+	filename := time.Now().Format("20060102") + "_" +
 		strconv.FormatInt(time.Now().Unix(), 10) + "_" +
 		file.Filename
-	err = c.SaveUploadedFile(file, conf.DataPath+filepath)
+	err = c.SaveUploadedFile(file, filepath.Join(conf.DataPath, filename))
 	if err != nil {
 		return errors.New("视频上传出错")
 	}
@@ -143,7 +143,7 @@ func Publish(c *gin.Context, request PublishRequest) error {
 	repository.InsertVideo(repository.Video{
 		AuthorId: request.CurrentUserId,
 		Title:    request.Title,
-		Data:     filepath,
+		Data:     filename,
 		Cover:    "", // TODO
 	})
 

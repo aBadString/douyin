@@ -44,7 +44,7 @@ func InitRouter(router gin.IRouter) {
 func Auth(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
-		c.PostForm("token")
+		token = c.PostForm("token")
 	}
 	if token == "" {
 		return

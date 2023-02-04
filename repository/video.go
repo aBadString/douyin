@@ -22,7 +22,7 @@ func GetVideoListByAuthorId(authorId int) []Video {
 }
 
 func InsertVideo(video Video) {
-	ORM.Save(video)
+	ORM.Save(&video)
 }
 
 type VideoWithAuthor struct {
