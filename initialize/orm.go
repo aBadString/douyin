@@ -1,7 +1,6 @@
 package initialize
 
 import (
-	"douyin/repository"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-func InitORM(conn string) {
+func InitORM(conn string) *gorm.DB {
 	var ormLogger logger.Interface
 	if gin.Mode() == "debug" {
 		ormLogger = logger.Default.LogMode(logger.Info)
@@ -39,5 +38,5 @@ func InitORM(conn string) {
 	sqlDB.SetMaxIdleConns(20)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Second * 30)
-	repository.ORM = db
+	return db
 }

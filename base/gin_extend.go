@@ -100,8 +100,9 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 		var field reflect.StructField = theStruct.Type().Field(i)
 
 		// 将值赋给对应的字段
-		switch field.Type {
-		case reflect.TypeOf(int(0)):
+		switch field.Type.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			val, hasVal := fetchValue(field.Tag, c)
 			if hasVal {
 				switch val.(type) {
@@ -112,7 +113,7 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 					theStruct.FieldByName(field.Name).SetInt(v)
 				}
 			}
-		case reflect.TypeOf(string("")):
+		case reflect.String:
 			val, hasVal := fetchValue(field.Tag, c)
 			if hasVal {
 				if v, ok := val.(string); ok {
