@@ -4,7 +4,6 @@ import (
 	"douyin/base"
 	"douyin/service"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 // InitRouter 初始化 Gin 的路由
@@ -14,15 +13,15 @@ func InitRouter(router gin.IRouter) {
 
 	apiRouter := router.Group("/douyin")
 	{
-		//apiRouter.GET("/feed/",  service.Feed)
 		//apiRouter.POST("/user/register/", service.Register)
 		apiRouter.POST("/user/login/", service.Login)
 
 		authRouter := apiRouter.Group("/", Auth)
 		{
 			// 基础接口
+			apiRouter.GET("/feed/", base.HandlerFuncConverter(service.Feed))
 			authRouter.GET("/user/", base.HandlerFuncConverter(service.UserInfo))
-			//authRouter.POST("/publish/action/",  base.HandlerFuncConverter(service.Publish))
+			authRouter.POST("/publish/action/", base.HandlerFuncConverter(service.Publish))
 			authRouter.GET("/publish/list/", base.HandlerFuncConverter(service.PublishList))
 
 			// 互动接口
@@ -44,16 +43,18 @@ func InitRouter(router gin.IRouter) {
 
 func Auth(c *gin.Context) {
 	token := c.Query("token")
-	currentUserId, err := service.GetUserIdByToken(token)
-
-	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{
-			"status_code": http.StatusForbidden,
-			"status_msg":  "invalid token",
-		})
-		c.Abort()
+	if token == "" {
+		c.PostForm("token")
+	}
+	if token == "" {
+		return
 	}
 
-	// 鉴权成功将 current_user_id 放到上下文中
+	currentUserId, err := service.GetUserIdByToken(token)
+	if err != nil {
+		return
+	}
+
+	// 将 current_user_id 放到上下文中
 	c.Set("current_user_id", currentUserId)
 }

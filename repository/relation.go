@@ -11,9 +11,9 @@ type Relation struct {
 
 // IsFollow 判断 userId 是否关注了 followedUserId
 func IsFollow(userId, followedUserId int) bool {
-	var r Relation
-	ORM.Select("id").
+	var c int64
+	ORM.Count(&c).
 		Where("user_id = ? and followed_user_id = ?", userId, followedUserId).
-		First(&r)
-	return r.Id != 0
+		Limit(1)
+	return c != 0
 }

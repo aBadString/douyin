@@ -10,8 +10,8 @@ import (
 
 type UserLoginResponse struct {
 	StatusCode int    `json:"status_code"`
-	StatusMsg  string `json:"status_msg,omitempty"`
-	UserId     int    `json:"user_id,omitempty"`
+	StatusMsg  string `json:"status_msg"`
+	UserId     int    `json:"user_id"`
 	Token      string `json:"token"`
 }
 
@@ -43,7 +43,7 @@ func Login(c *gin.Context) {
 
 type UserInfoRequest struct {
 	UserId        int `query:"user_id"`
-	CurrentUserId int `query:"current_user_id"`
+	CurrentUserId int `context:"current_user_id"`
 }
 
 type User struct {
@@ -62,7 +62,10 @@ func UserInfo(userRequest UserInfoRequest) (User, error) {
 		return User{}, errors.New("用户不存在")
 	}
 
-	isFollow := repository.IsFollow(userRequest.CurrentUserId, userRequest.UserId)
+	var isFollow = false
+	if userRequest.CurrentUserId != 0 {
+		isFollow = repository.IsFollow(userRequest.CurrentUserId, userRequest.UserId)
+	}
 
 	return User{
 		Id:            user.Id,

@@ -14,7 +14,9 @@ create table if not exists `video` (
     `cover` varchar(255) not null comment '视频封面图片, 文件系统路径',
     `favorite_count` int default 0 comment '点赞总数, 定时从 `favorite` 中异步统计更新',
     `comment_count` int default 0 comment '评论总数, 定时从 `comment` 中异步统计更新',
-    index(`author_id`) comment '发布列表, 列出用户所有投稿过的视频'
+    `time` timestamp default CURRENT_TIMESTAMP comment '投稿时间',
+    index(`author_id`) comment '发布列表, 列出用户所有投稿过的视频',
+    index(`time`) comment '视频流接口, 按投稿时间倒序的视频列表'
 ) comment '视频' engine=innodb default charset=utf8;
 
 
