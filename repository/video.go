@@ -53,3 +53,16 @@ func GetVideoListOrderTime(time time.Time, count int) []VideoWithAuthor {
 	).Scan(&v)
 	return v
 }
+
+func GetVideoListIn(videoIds []int) []VideoWithAuthor {
+	var v []VideoWithAuthor
+	ORM.Raw(
+		"select "+
+			"video.id as id, title, data, cover, favorite_count, comment_count,"+
+			"user.id as author_id, username, follow_count, follower_count "+
+			"from video join user on video.author_id = user.id "+
+			"where video.id in ? ",
+		videoIds,
+	).Scan(&v)
+	return v
+}

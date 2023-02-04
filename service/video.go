@@ -42,15 +42,28 @@ func Feed(request FeedRequest) (NextTime, VideoList) {
 	// 1. 查询按投稿时间倒序的视频列表
 	var videos = repository.GetVideoListOrderTime(_time, 2)
 
+	videoList := toVideoList(request.CurrentUserId, videos)
+
+	// 4. 最后一个视频的投稿时间
+	var nextTime int64 = 0
+	if len(videos) > 0 {
+		nextTime = videos[len(videos)-1].Time.Unix()
+	}
+
+	return NextTime(nextTime), videoList
+}
+
+func toVideoList(currentUserId int, videos []repository.VideoWithAuthor) VideoList {
 	var videoList = make(VideoList, len(videos))
 	for i, video := range videos {
-		// 2. 当前用户是否关注了该视频的作者
-		isFollowAuthor := false
-		if request.CurrentUserId != 0 {
-			isFollowAuthor = repository.IsFollow(request.CurrentUserId, video.AuthorId)
+		// 1. 当前用户是否关注了该视频的作者, 是否点赞了该视频
+		isFollowAuthor, isFavorite := false, false
+		if currentUserId != 0 {
+			isFollowAuthor = repository.IsFollow(currentUserId, video.AuthorId)
+			isFavorite = repository.IsFavorite(currentUserId, video.Id)
 		}
 
-		// 3. 重构返回数据格式
+		// 2. 重构返回数据格式
 		videoList[i] = Video{
 			Id: video.Id,
 			Author: User{
@@ -64,18 +77,11 @@ func Feed(request FeedRequest) (NextTime, VideoList) {
 			CoverUrl:      conf.Hostname + conf.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
-			IsFavorite:    false, // TODO
+			IsFavorite:    isFavorite,
 			Title:         video.Title,
 		}
 	}
-
-	// 4. 最后一个视频的投稿时间
-	var nextTime int64 = 0
-	if len(videos) > 0 {
-		nextTime = videos[len(videos)-1].Time.Unix()
-	}
-
-	return NextTime(nextTime), videoList
+	return videoList
 }
 
 type PublishListRequest struct {
@@ -100,6 +106,11 @@ func PublishList(request PublishListRequest) (VideoList, error) {
 	// 3. 重构返回数据格式
 	var videoList = make(VideoList, len(videos))
 	for i, video := range videos {
+		isFavorite := false
+		if request.CurrentUserId != 0 {
+			isFavorite = repository.IsFavorite(request.CurrentUserId, video.Id)
+		}
+
 		videoList[i] = Video{
 			Id:            video.Id,
 			Author:        author,
@@ -107,7 +118,7 @@ func PublishList(request PublishListRequest) (VideoList, error) {
 			CoverUrl:      conf.Hostname + conf.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
-			IsFavorite:    false, // TODO
+			IsFavorite:    isFavorite,
 			Title:         video.Title,
 		}
 	}
