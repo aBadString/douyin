@@ -23,10 +23,19 @@ func RelationAction(r ActionRequest) error {
 	//判断操作类型：1 关注； 2 取关； 其他报错
 	if r.ActionType == 1 {
 		_, err := repository.CreateRelation(r.CurrentUserId, r.ToUserId)
-		return err
+		if err != nil {
+			return err
+		}
+		repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 1)
+		return nil
 	}
 	if r.ActionType == 2 {
-		return repository.CancelRelation(r.CurrentUserId, r.ToUserId)
+		err := repository.CancelRelation(r.CurrentUserId, r.ToUserId)
+		if err != nil {
+			return err
+		}
+		repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 2)
+		return nil
 	}
 	return errors.New("invalid action_type")
 }

@@ -1,5 +1,9 @@
 package repository
 
+import (
+	"gorm.io/gorm"
+)
+
 type User struct {
 	Id            int
 	Username      string
@@ -23,4 +27,19 @@ func GetUserById(userId int) User {
 		Where("id = ?", userId).
 		First(&user)
 	return user
+}
+
+func UpdateUserCount(currentUserId, toUserId, mode int) {
+	if mode == 1 {
+		ORM.Model(&User{Id: currentUserId}).
+			Update("follow_count", gorm.Expr("follow_count+?", 1))
+		ORM.Model(&User{Id: toUserId}).
+			Update("follower_count", gorm.Expr("follower_count+?", 1))
+	}
+	if mode == 2 {
+		ORM.Model(&User{Id: currentUserId}).
+			Update("follow_count", gorm.Expr("follow_count-?", 1))
+		ORM.Model(&User{Id: toUserId}).
+			Update("follower_count", gorm.Expr("follower_count-?", 1))
+	}
 }
