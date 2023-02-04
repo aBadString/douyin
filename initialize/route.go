@@ -31,10 +31,10 @@ func InitRouter(router gin.IRouter) {
 			//authRouter.GET("/comment/list/",  base.HandlerFuncConverter(service.CommentList))
 
 			// 社交接口
-			//authRouter.POST("/relation/action/",  base.HandlerFuncConverter(service.RelationAction))
-			//authRouter.GET("/relation/follow/list/",  base.HandlerFuncConverter(service.FollowList))
-			//authRouter.GET("/relation/follower/list/",  base.HandlerFuncConverter(service.FollowerList))
-			//authRouter.GET("/relation/friend/list/",  base.HandlerFuncConverter(service.FriendList))
+			authRouter.POST("/relation/action/", base.HandlerFuncConverter(service.RelationAction))
+			authRouter.GET("/relation/follow/list/", base.HandlerFuncConverter(service.FollowList))
+			authRouter.GET("/relation/follower/list/", base.HandlerFuncConverter(service.FollowerList))
+			authRouter.GET("/relation/friend/list/", base.HandlerFuncConverter(service.FriendList))
 			//authRouter.GET("/message/chat/",  base.HandlerFuncConverter(service.MessageChat))
 			//authRouter.POST("/message/action/",  base.HandlerFuncConverter(service.MessageAction))
 		}
