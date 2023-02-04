@@ -26,7 +26,7 @@ func InitRouter(router gin.IRouter) {
 
 			// 互动接口
 			//authRouter.POST("/favorite/action/",  base.HandlerFuncConverter(service.FavoriteAction))
-			//authRouter.GET("/favorite/list/",  base.HandlerFuncConverter(service.FavoriteList))
+			authRouter.GET("/favorite/list/", base.HandlerFuncConverter(service.FavoriteList))
 			//authRouter.POST("/comment/action/",  base.HandlerFuncConverter(service.CommentAction))
 			//authRouter.GET("/comment/list/",  base.HandlerFuncConverter(service.CommentList))
 
