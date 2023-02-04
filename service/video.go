@@ -5,6 +5,7 @@ import (
 	"douyin/repository"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"path/filepath"
 	"strconv"
 	"time"
 )
