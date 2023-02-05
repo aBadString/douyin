@@ -56,10 +56,10 @@ type User struct {
 
 // UserInfo 用户信息
 // 获取用户的 id、昵称，如果实现社交部分的功能，还会返回关注数和粉丝数
-func UserInfo(userRequest UserInfoRequest) (User, error) {
+func UserInfo(userRequest UserInfoRequest) (*User, error) {
 	var user = repository.GetUserById(userRequest.UserId)
 	if user.Id == 0 {
-		return User{}, errors.New("用户不存在")
+		return nil, errors.New("用户不存在")
 	}
 
 	var isFollow = false
@@ -67,7 +67,7 @@ func UserInfo(userRequest UserInfoRequest) (User, error) {
 		isFollow = repository.IsFollow(userRequest.CurrentUserId, userRequest.UserId)
 	}
 
-	return User{
+	return &User{
 		Id:            user.Id,
 		Name:          user.Username,
 		FollowCount:   user.FollowCount,

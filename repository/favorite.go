@@ -22,6 +22,7 @@ func GetVideoIdsByUserId(userId int) []int {
 	ORM.Model(&Favorite{}).
 		Select("video_id").
 		Where("user_id = ?", userId).
+		Order("time desc").
 		Find(&videoIds)
 	return videoIds
 }
