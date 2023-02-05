@@ -4,6 +4,8 @@ import (
 	"douyin/base"
 	"douyin/service"
 	"github.com/gin-gonic/gin"
+	"net/http"
+	"strings"
 )
 
 // InitRouter 初始化 Gin 的路由
@@ -19,7 +21,7 @@ func InitRouter(router gin.IRouter) {
 		authRouter := apiRouter.Group("/", Auth)
 		{
 			// 基础接口
-			apiRouter.GET("/feed/", base.HandlerFuncConverter(service.Feed))
+			authRouter.GET("/feed/", base.HandlerFuncConverter(service.Feed))
 			authRouter.GET("/user/", base.HandlerFuncConverter(service.UserInfo))
 			authRouter.POST("/publish/action/", base.HandlerFuncConverter(service.Publish))
 			authRouter.GET("/publish/list/", base.HandlerFuncConverter(service.PublishList))
@@ -35,8 +37,8 @@ func InitRouter(router gin.IRouter) {
 			authRouter.GET("/relation/follow/list/", base.HandlerFuncConverter(service.FollowList))
 			authRouter.GET("/relation/follower/list/", base.HandlerFuncConverter(service.FollowerList))
 			authRouter.GET("/relation/friend/list/", base.HandlerFuncConverter(service.FriendList))
-			//authRouter.GET("/message/chat/",  base.HandlerFuncConverter(service.MessageChat))
-			//authRouter.POST("/message/action/",  base.HandlerFuncConverter(service.MessageAction))
+			authRouter.GET("/message/chat/", base.HandlerFuncConverter(service.MessageChat))
+			authRouter.POST("/message/action/", base.HandlerFuncConverter(service.MessageAction))
 		}
 	}
 }
@@ -44,17 +46,26 @@ func InitRouter(router gin.IRouter) {
 func Auth(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
+		///feed允许非登录状态下请求
+		if strings.Contains(c.FullPath(), "/feed") {
+			return
+		}
 		token = c.PostForm("token")
 	}
 	if token == "" {
-		return
+		c.JSON(http.StatusForbidden, map[string]any{
+			"status_code": http.StatusForbidden,
+			"status_msg":  "auth failed, check to login or registry",
+		})
+		c.Abort()
+		//直接return，请求还会顺着路由往下走，使用Abort提前中止请求
+		//return
 	}
 
 	currentUserId, err := service.GetUserIdByToken(token)
 	if err != nil {
 		return
 	}
-
 	// 将 current_user_id 放到上下文中
 	c.Set("current_user_id", currentUserId)
 }
