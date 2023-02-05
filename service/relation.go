@@ -26,16 +26,14 @@ func RelationAction(r ActionRequest) error {
 		if err != nil {
 			return err
 		}
-		repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 1)
-		return nil
+		return repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 1)
 	}
 	if r.ActionType == 2 {
 		err := repository.CancelRelation(r.CurrentUserId, r.ToUserId)
 		if err != nil {
 			return err
 		}
-		repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 2)
-		return nil
+		return repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 2)
 	}
 	return errors.New("invalid action_type")
 }
