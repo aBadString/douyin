@@ -21,14 +21,14 @@ func InitRouter(router gin.IRouter) {
 			// 基础接口
 			apiRouter.GET("/feed/", base.HandlerFuncConverter(service.Feed))
 			authRouter.GET("/user/", base.HandlerFuncConverter(service.UserInfo))
-			authRouter.POST("/publish/action/", base.HandlerFuncConverter(service.Publish))
+			authRouter.POST("/publish/action/", base.HandlerFuncConverter(service.PublishVideo))
 			authRouter.GET("/publish/list/", base.HandlerFuncConverter(service.PublishList))
 
 			// 互动接口
 			//authRouter.POST("/favorite/action/",  base.HandlerFuncConverter(service.FavoriteAction))
 			authRouter.GET("/favorite/list/", base.HandlerFuncConverter(service.FavoriteList))
-			//authRouter.POST("/comment/action/",  base.HandlerFuncConverter(service.CommentAction))
-			//authRouter.GET("/comment/list/",  base.HandlerFuncConverter(service.CommentList))
+			authRouter.POST("/comment/action/", base.HandlerFuncConverter(service.CommentAction))
+			authRouter.GET("/comment/list/", base.HandlerFuncConverter(service.VideoCommentList))
 
 			// 社交接口
 			authRouter.POST("/relation/action/", base.HandlerFuncConverter(service.RelationAction))

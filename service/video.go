@@ -113,7 +113,7 @@ func PublishList(request PublishListRequest) (VideoList, error) {
 
 		videoList[i] = Video{
 			Id:            video.Id,
-			Author:        author,
+			Author:        *author,
 			PlayUrl:       conf.Hostname + conf.DataUrl + video.Data,
 			CoverUrl:      conf.Hostname + conf.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,
@@ -130,9 +130,9 @@ type PublishRequest struct {
 	CurrentUserId int    `context:"current_user_id"`
 }
 
-// Publish 投稿接口
+// PublishVideo 投稿接口
 // 登录用户选择视频上传
-func Publish(c *gin.Context, request PublishRequest) error {
+func PublishVideo(c *gin.Context, request PublishRequest) error {
 	if request.CurrentUserId == 0 {
 		return errors.New("请先登录再投稿视频")
 	}

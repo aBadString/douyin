@@ -233,6 +233,10 @@ func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []strin
 // camelCase -> camel_case
 // CamelCase -> camel_case
 func camelCaseToUnder(camelCase string) string {
+	if len(camelCase) <= 0 {
+		return ""
+	}
+
 	s := make([]byte, 0, 2*len(camelCase))
 
 	s = append(s, camelCase[0])

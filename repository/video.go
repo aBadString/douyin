@@ -17,6 +17,7 @@ func GetVideoListByAuthorId(authorId int) []Video {
 	var videos []Video
 	ORM.Select("id, title, data, cover, favorite_count, comment_count").
 		Where("author_id = ?", authorId).
+		Order("time desc").
 		Find(&videos)
 	return videos
 }
