@@ -20,6 +20,9 @@ type UserList []*User
 
 func RelationAction(r ActionRequest) error {
 
+	if r.CurrentUserId == 0 {
+		return errors.New("请先登录")
+	}
 	//判断操作类型：1 关注； 2 取关； 其他报错
 	if r.ActionType == 1 {
 		_, err := repository.CreateRelation(r.CurrentUserId, r.ToUserId)

@@ -4,8 +4,6 @@ import (
 	"douyin/base"
 	"douyin/service"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strings"
 )
 
 // InitRouter 初始化 Gin 的路由
@@ -46,20 +44,10 @@ func InitRouter(router gin.IRouter) {
 func Auth(c *gin.Context) {
 	token := c.Query("token")
 	if token == "" {
-		///feed允许非登录状态下请求
-		if strings.Contains(c.FullPath(), "/feed") {
-			return
-		}
 		token = c.PostForm("token")
 	}
 	if token == "" {
-		c.JSON(http.StatusForbidden, map[string]any{
-			"status_code": http.StatusForbidden,
-			"status_msg":  "auth failed, check to login or registry",
-		})
-		c.Abort()
-		//直接return，请求还会顺着路由往下走，使用Abort提前中止请求
-		//return
+		return
 	}
 
 	currentUserId, err := service.GetUserIdByToken(token)
