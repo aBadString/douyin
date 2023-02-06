@@ -6,8 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// InitRouter 初始化 Gin 的路由
-func InitRouter(router gin.IRouter) {
+func InitGin() *gin.Engine {
+	var ginEngine = gin.Default()
+	initRouter(ginEngine)
+	return ginEngine
+}
+
+// initRouter 初始化 Gin 的路由
+func initRouter(router gin.IRouter) {
 
 	router.Static("/static", "./public")
 

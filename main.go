@@ -1,14 +1,14 @@
 package main
 
 import (
+	"douyin/conf"
 	"douyin/initialize"
 	"douyin/repository"
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	var ginEngine *gin.Engine = gin.Default()
-	initialize.InitRouter(ginEngine)
+	conf.Hostname = "http://192.168.43.160:8080"
 	repository.ORM = initialize.InitORM("visitor:visitor@tcp(localhost:3306)/douyin?charset=utf8&parseTime=True&loc=Local")
+	ginEngine := initialize.InitGin()
 	_ = ginEngine.Run()
 }
