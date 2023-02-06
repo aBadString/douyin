@@ -120,7 +120,7 @@ func PublishList(request PublishListRequest) (VideoList, error) {
 
 		videoList[i] = Video{
 			Id:            video.Id,
-			Author:        *author,
+			Author:        author,
 			PlayUrl:       conf.Hostname + conf.DataUrl + video.Data,
 			CoverUrl:      conf.Hostname + conf.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,

@@ -5,14 +5,15 @@ import (
 	"errors"
 )
 
-type Comment struct {
+type CommentItem struct {
 	Id         int    `json:"id"`
 	User       User   `json:"user"`
 	Content    string `json:"content"`
 	CreateDate string `json:"create_date"`
 }
 
-type CommentList []Comment
+type CommentList []CommentItem
+type Comment *CommentItem
 
 type CommentListRequest struct {
 	VideoId       int `query:"video_id"`
@@ -30,13 +31,13 @@ func VideoCommentList(request CommentListRequest) CommentList {
 	return commentList
 }
 
-func toComment(currentUserId, videoId int, comment repository.CommentWithUser) Comment {
+func toComment(currentUserId, videoId int, comment repository.CommentWithUser) CommentItem {
 	isFollow := false
 	if currentUserId != 0 {
 		isFollow = repository.IsFollow(currentUserId, videoId)
 	}
 
-	return Comment{
+	return CommentItem{
 		Id: comment.Id,
 		User: User{
 			Id:            comment.UserId,
@@ -60,7 +61,7 @@ type CommentActionRequest struct {
 
 // CommentAction 评论操作
 // 登录用户对视频进行评论
-func CommentAction(request CommentActionRequest) (*Comment, error) {
+func CommentAction(request CommentActionRequest) (Comment, error) {
 	if request.CurrentUserId == 0 {
 		return nil, errors.New("请先登录")
 	}
@@ -76,7 +77,7 @@ func CommentAction(request CommentActionRequest) (*Comment, error) {
 }
 
 // PublishComment 发布评论
-func PublishComment(request CommentActionRequest) (*Comment, error) {
+func PublishComment(request CommentActionRequest) (Comment, error) {
 	commentId := repository.InsertComment(repository.Comment{
 		UserId:      request.CurrentUserId,
 		VideoId:     request.VideoId,
@@ -92,7 +93,7 @@ func PublishComment(request CommentActionRequest) (*Comment, error) {
 }
 
 // DeleteComment 删除评论
-func DeleteComment(request CommentActionRequest) (*Comment, error) {
+func DeleteComment(request CommentActionRequest) (Comment, error) {
 	var comment = repository.GetCommentById(request.CommentId)
 	if comment.Id == 0 {
 		return nil, errors.New("评论不存在")
@@ -107,5 +108,5 @@ func DeleteComment(request CommentActionRequest) (*Comment, error) {
 		return nil, errors.New("删除评论失败")
 	}
 
-	return &Comment{Id: comment.Id}, nil
+	return &CommentItem{Id: comment.Id}, nil
 }

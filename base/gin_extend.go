@@ -127,7 +127,7 @@ func bindStruct(theStruct reflect.Value, c *gin.Context) {
 // fetchValue 依次从 [QueryString, 表单] 中取值
 func fetchValue(fieldTag reflect.StructTag, c *gin.Context) (any, bool) {
 	var val any = nil
-	for _, tagName := range []string{"query", "from", "context"} {
+	for _, tagName := range []string{"query", "form", "context"} {
 		paramName := fieldTag.Get(tagName)
 		if paramName == "" {
 			continue
