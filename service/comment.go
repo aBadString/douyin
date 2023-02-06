@@ -3,6 +3,7 @@ package service
 import (
 	"douyin/repository"
 	"errors"
+	"strings"
 )
 
 type CommentItem struct {
@@ -66,6 +67,10 @@ func CommentAction(request CommentActionRequest) (Comment, error) {
 		return nil, errors.New("请先登录")
 	}
 
+	if request.VideoId == 0 || !repository.ExistVideoById(request.VideoId) {
+		return nil, errors.New("视频不存在")
+	}
+
 	switch request.ActionType {
 	case 1:
 		return PublishComment(request)
@@ -78,6 +83,11 @@ func CommentAction(request CommentActionRequest) (Comment, error) {
 
 // PublishComment 发布评论
 func PublishComment(request CommentActionRequest) (Comment, error) {
+	request.CommentText = strings.TrimSpace(request.CommentText)
+	if request.CommentText == "" {
+		return nil, errors.New("不能发布空白评论")
+	}
+
 	commentId := repository.InsertComment(repository.Comment{
 		UserId:      request.CurrentUserId,
 		VideoId:     request.VideoId,
@@ -108,5 +118,5 @@ func DeleteComment(request CommentActionRequest) (Comment, error) {
 		return nil, errors.New("删除评论失败")
 	}
 
-	return &CommentItem{Id: comment.Id}, nil
+	return nil, nil
 }

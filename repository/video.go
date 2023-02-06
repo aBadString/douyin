@@ -67,3 +67,11 @@ func GetVideoListIn(videoIds []int) []VideoWithAuthor {
 	).Scan(&v)
 	return v
 }
+
+func ExistVideoById(videoId int) bool {
+	var v Video
+	ORM.Select("id").
+		Where("id = ?", videoId).
+		First(&v)
+	return v.Id != 0
+}

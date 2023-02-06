@@ -98,14 +98,14 @@ type PublishListRequest struct {
 
 // PublishList 发布列表
 // 用户的视频发布列表，直接列出用户所有投稿过的视频
-func PublishList(request PublishListRequest) (VideoList, error) {
+func PublishList(request PublishListRequest) VideoList {
 	// 1. 查询作者信息
 	author, err := UserInfo(UserInfoRequest{
 		UserId:        request.UserId,
 		CurrentUserId: request.CurrentUserId,
 	})
 	if err != nil {
-		return nil, err
+		return make(VideoList, 0)
 	}
 	// 2. 查询该作者的全部视频
 	var videos = repository.GetVideoListByAuthorId(author.Id)
@@ -129,7 +129,7 @@ func PublishList(request PublishListRequest) (VideoList, error) {
 			Title:         video.Title,
 		}
 	}
-	return videoList, nil
+	return videoList
 }
 
 type PublishRequest struct {
