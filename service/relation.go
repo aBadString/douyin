@@ -1,8 +1,8 @@
 package service
 
 import (
+	"douyin/base"
 	"douyin/repository"
-	"errors"
 )
 
 type ActionRequest struct {
@@ -21,7 +21,7 @@ type UserList []*User
 func RelationAction(r ActionRequest) error {
 
 	if r.CurrentUserId == 0 {
-		return errors.New("请先登录")
+		return base.NewUnauthorizedError()
 	}
 	//判断操作类型：1 关注； 2 取关； 其他报错
 	if r.ActionType == 1 {
@@ -38,7 +38,7 @@ func RelationAction(r ActionRequest) error {
 		}
 		return repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 2)
 	}
-	return errors.New("invalid action_type")
+	return base.NewBadRequestError("invalid action_type")
 }
 
 func FollowList(lr ListRequest) (UserList, error) {

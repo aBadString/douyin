@@ -1,8 +1,8 @@
 package service
 
 import (
+	"douyin/base"
 	"douyin/repository"
-	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -59,7 +59,7 @@ type User struct {
 func UserInfo(userRequest UserInfoRequest) (User, error) {
 	var user = repository.GetUserById(userRequest.UserId)
 	if user.Id == 0 {
-		return User{}, errors.New("用户不存在")
+		return User{}, base.NewNotFoundError("用户不存在")
 	}
 
 	var isFollow = false
@@ -80,7 +80,7 @@ func GetUserIdByToken(token string) (int, error) {
 	// TODO: 校验 Token 算法
 	userId, err := strconv.ParseInt(token, 10, 64)
 	if err != nil {
-		return 0, errors.New("token 被篡改或者已经失效")
+		return 0, base.NewError(401, "token 被篡改或者已经失效")
 	}
 	return int(userId), nil
 }

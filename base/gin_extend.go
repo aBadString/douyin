@@ -174,7 +174,10 @@ func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []strin
 		name string
 		data any
 	}, 0, len(retValues)-1)
-	errorList := make([]error, 0, 1)
+	errorList := make([]struct {
+		code    int
+		message string
+	}, 0, 1)
 
 	for i, ret := range retValues {
 		if ret.Interface() == nil {
@@ -182,7 +185,20 @@ func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []strin
 		}
 
 		if ret.Type() == reflect.TypeOf((*error)(nil)).Elem() {
-			errorList = append(errorList, ret.Interface().(error))
+			err := ret.Interface().(error)
+
+			var code int
+			switch err.(type) {
+			case *serviceError:
+				code = ret.Interface().(*serviceError).GetCode()
+			default:
+				code = http.StatusInternalServerError
+			}
+
+			errorList = append(errorList, struct {
+				code    int
+				message string
+			}{code: code, message: err.Error()})
 		} else {
 			dataList = append(dataList, struct {
 				name string
@@ -212,17 +228,17 @@ func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []strin
 	} else {
 		// 2.2. 有错误
 		if len(errorList) == 1 {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"status_code": 500,
-				"status_msg":  errorList[0].Error(),
+			c.JSON(errorList[0].code, gin.H{
+				"status_code": errorList[0].code,
+				"status_msg":  errorList[0].message,
 			})
 		} else {
 			errorMessages := make([]string, len(errorList))
 			for i, err := range errorList {
-				errorMessages[i] = err.Error()
+				errorMessages[i] = err.message
 			}
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"status_code": 500,
+				"status_code": http.StatusInternalServerError,
 				"status_msg":  errorMessages,
 			})
 		}

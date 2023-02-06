@@ -1,8 +1,8 @@
 package service
 
 import (
+	"douyin/base"
 	"douyin/repository"
-	"errors"
 	"time"
 )
 
@@ -29,7 +29,7 @@ type MessageList []*Message
 
 func MessageAction(msg MessageRequest) error {
 	if msg.CurrentUserId == 0 {
-		return errors.New("请先登录")
+		return base.NewUnauthorizedError()
 	}
 	_, err := repository.CreateMessage(msg.CurrentUserId, msg.ToUserId, msg.Content)
 	return err
@@ -41,7 +41,7 @@ app前端暂时没有成功显示
 func MessageChat(ml MessageListRequest) (MessageList, error) {
 
 	if ml.CurrentUserId == 0 {
-		return nil, errors.New("请先登录")
+		return nil, base.NewUnauthorizedError()
 	}
 	msgList, err := repository.GetMessageListFromSIdToRId(ml.CurrentUserId, ml.ToUserId)
 	if err != nil {

@@ -1,8 +1,8 @@
 package service
 
 import (
+	"douyin/base"
 	"douyin/repository"
-	"errors"
 	"strings"
 )
 
@@ -64,11 +64,11 @@ type CommentActionRequest struct {
 // 登录用户对视频进行评论
 func CommentAction(request CommentActionRequest) (Comment, error) {
 	if request.CurrentUserId == 0 {
-		return nil, errors.New("请先登录")
+		return nil, base.NewUnauthorizedError()
 	}
 
 	if request.VideoId == 0 || !repository.ExistVideoById(request.VideoId) {
-		return nil, errors.New("视频不存在")
+		return nil, base.NewServerError("视频不存在")
 	}
 
 	switch request.ActionType {
@@ -77,7 +77,7 @@ func CommentAction(request CommentActionRequest) (Comment, error) {
 	case 2:
 		return DeleteComment(request)
 	default:
-		return nil, errors.New("action_type 值错误, 1-发布评论, 2-删除评论")
+		return nil, base.NewBadRequestError("action_type 值错误, 1-发布评论, 2-删除评论")
 	}
 }
 
@@ -85,7 +85,7 @@ func CommentAction(request CommentActionRequest) (Comment, error) {
 func PublishComment(request CommentActionRequest) (Comment, error) {
 	request.CommentText = strings.TrimSpace(request.CommentText)
 	if request.CommentText == "" {
-		return nil, errors.New("不能发布空白评论")
+		return nil, base.NewBadRequestError("不能发布空白评论")
 	}
 
 	commentId := repository.InsertComment(repository.Comment{
@@ -94,7 +94,7 @@ func PublishComment(request CommentActionRequest) (Comment, error) {
 		CommentText: request.CommentText,
 	})
 	if commentId == 0 {
-		return nil, errors.New("发表评论失败")
+		return nil, base.NewServerError("发表评论失败")
 	}
 
 	var commentWithUser = repository.GetCommentWithUserById(commentId)
@@ -106,16 +106,16 @@ func PublishComment(request CommentActionRequest) (Comment, error) {
 func DeleteComment(request CommentActionRequest) (Comment, error) {
 	var comment = repository.GetCommentById(request.CommentId)
 	if comment.Id == 0 {
-		return nil, errors.New("评论不存在")
+		return nil, base.NewServerError("评论不存在")
 	}
 
 	if request.CurrentUserId != comment.UserId {
-		return nil, errors.New("这不是您的评论")
+		return nil, base.NewForbiddenError("这不是您的评论")
 	}
 
 	isDelete := repository.DeleteCommentById(comment)
 	if !isDelete {
-		return nil, errors.New("删除评论失败")
+		return nil, base.NewServerError("删除评论失败")
 	}
 
 	return nil, nil

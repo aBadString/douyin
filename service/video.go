@@ -2,9 +2,9 @@ package service
 
 import (
 	"bytes"
+	"douyin/base"
 	"douyin/conf"
 	"douyin/repository"
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -141,13 +141,13 @@ type PublishRequest struct {
 // 登录用户选择视频上传
 func PublishVideo(c *gin.Context, request PublishRequest) error {
 	if request.CurrentUserId == 0 {
-		return errors.New("请先登录再投稿视频")
+		return base.NewUnauthorizedError()
 	}
 
 	// 1. 保存视频文件
 	file, err := c.FormFile("data")
 	if err != nil {
-		return errors.New("视频上传出错")
+		return base.NewServerError("视频上传出错")
 	}
 
 	filename := time.Now().Format("20060102") + "_" +
@@ -156,7 +156,7 @@ func PublishVideo(c *gin.Context, request PublishRequest) error {
 	videoPath := filepath.Join(conf.DataPath, filename)
 	err = c.SaveUploadedFile(file, videoPath)
 	if err != nil {
-		return errors.New("视频上传出错")
+		return base.NewServerError("视频上传出错")
 	}
 
 	// 2. 生成视频封面
