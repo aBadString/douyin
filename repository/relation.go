@@ -35,9 +35,7 @@ func CreateRelation(userId, followedUserId int) int {
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 
 	var r *gorm.DB
@@ -48,7 +46,7 @@ func CreateRelation(userId, followedUserId int) int {
 		return 0
 	}
 
-	r = tx.Model(&User{Id: userId}).Update("1follow_count", gorm.Expr("follow_count+ ?", 1))
+	r = tx.Model(&User{Id: userId}).Update("follow_count", gorm.Expr("follow_count+ ?", 1))
 	if r.Error != nil || r.RowsAffected == 0 {
 		tx.Rollback()
 		return 0
@@ -56,6 +54,11 @@ func CreateRelation(userId, followedUserId int) int {
 
 	r = tx.Model(&User{Id: followedUserId}).Update("follower_count", gorm.Expr("follower_count+ ?", 1))
 	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return 0
+	}
+
+	if tx.Commit().Error != nil {
 		tx.Rollback()
 		return 0
 	}
@@ -71,9 +74,7 @@ func CancelRelation(userId, followedUserId int) bool {
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 
 	var r *gorm.DB
@@ -90,6 +91,10 @@ func CancelRelation(userId, followedUserId int) bool {
 
 	r = tx.Model(&User{Id: followedUserId}).Update("follower_count", gorm.Expr("follower_count- ?", 1))
 	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return false
+	}
+	if tx.Commit().Error != nil {
 		tx.Rollback()
 		return false
 	}

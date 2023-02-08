@@ -39,9 +39,7 @@ func CreateFavorite(userId, videoId int) int {
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 
 	var r *gorm.DB
@@ -56,6 +54,10 @@ func CreateFavorite(userId, videoId int) int {
 		tx.Rollback()
 		return 0
 	}
+	if tx.Commit().Error != nil {
+		tx.Rollback()
+		return 0
+	}
 	return fav.Id
 }
 func CancelFavorite(userId, videoId int) bool {
@@ -66,9 +68,7 @@ func CancelFavorite(userId, videoId int) bool {
 	defer func() {
 		if err := recover(); err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 	var r *gorm.DB
 	r = tx.Where("user_id=? and video_id=?", userId, videoId).Delete(&Favorite{})
@@ -78,6 +78,10 @@ func CancelFavorite(userId, videoId int) bool {
 	}
 	tx.Model(&Video{Id: videoId}).Update("favorite_count", gorm.Expr("favorite_count-?", 1))
 	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return false
+	}
+	if tx.Commit().Error != nil {
 		tx.Rollback()
 		return false
 	}
