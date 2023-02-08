@@ -1,10 +1,5 @@
 package repository
 
-import (
-	"fmt"
-	"gorm.io/gorm"
-)
-
 type User struct {
 	Id            int
 	Username      string
@@ -18,32 +13,6 @@ func GetUserById(userId int) User {
 		Where("id = ?", userId).
 		First(&user)
 	return user
-}
-
-func UpdateUserCount(currentUserId, toUserId, mode int) error {
-
-	var rowsAffected int64
-	var exp1, exp2 string
-	if mode == 1 {
-		exp1 = "follow_count+ ?"
-		exp2 = "follower_count+ ?"
-	} else {
-		exp1 = "follow_count- ?"
-		exp2 = "follower_count- ?"
-	}
-	return ORM.Transaction(func(tx *gorm.DB) error {
-		rowsAffected = tx.Model(&User{Id: currentUserId}).
-			Update("follow_count", gorm.Expr(exp1, 1)).RowsAffected
-		if rowsAffected == 0 {
-			return fmt.Errorf("invalid userId:%v", currentUserId)
-		}
-		rowsAffected = tx.Model(&User{Id: toUserId}).
-			Update("follower_count", gorm.Expr(exp2, 1)).RowsAffected
-		if rowsAffected == 0 {
-			return fmt.Errorf("invalid userId:%v", toUserId)
-		}
-		return nil
-	})
 }
 
 type UsernamePassword struct {

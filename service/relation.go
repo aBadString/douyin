@@ -24,21 +24,19 @@ func RelationAction(r ActionRequest) error {
 		return base.NewUnauthorizedError()
 	}
 	//判断操作类型：1 关注； 2 取关； 其他报错
-	if r.ActionType == 1 {
-		_, err := repository.CreateRelation(r.CurrentUserId, r.ToUserId)
-		if err != nil {
-			return err
+	switch r.ActionType {
+	case 1:
+		if repository.CreateRelation(r.CurrentUserId, r.ToUserId) == 0 {
+			return base.NewServerError("关注失败")
 		}
-		return repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 1)
-	}
-	if r.ActionType == 2 {
-		err := repository.CancelRelation(r.CurrentUserId, r.ToUserId)
-		if err != nil {
-			return err
+	case 2:
+		if !repository.CancelRelation(r.CurrentUserId, r.ToUserId) {
+			return base.NewServerError("取关失败")
 		}
-		return repository.UpdateUserCount(r.CurrentUserId, r.ToUserId, 2)
+	default:
+		return base.NewServerError("非法的action_type")
 	}
-	return base.NewBadRequestError("invalid action_type")
+	return nil
 }
 
 func FollowList(lr ListRequest) (UserList, error) {

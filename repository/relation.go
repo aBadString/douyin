@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"fmt"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -27,28 +27,73 @@ func IsFollow(userId, followedUserId int) bool {
 	return r.Id != 0
 }
 
-func CreateRelation(userId, followedUserId int) (int, error) {
-
-	if !IsFollow(userId, followedUserId) {
-		r := &Relation{UserId: userId, FollowedUserId: followedUserId, Time: time.Now()}
-		tx := ORM.Create(r)
-		if tx.Error != nil {
-			return 0, tx.Error
-		}
-		return r.Id, nil
+func CreateRelation(userId, followedUserId int) int {
+	if IsFollow(userId, followedUserId) {
+		return 0
 	}
-	return 0, fmt.Errorf("repeatedly follow user %d", userId)
+	tx := ORM.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	var r *gorm.DB
+	f := Relation{UserId: userId, FollowedUserId: followedUserId, Time: time.Now()}
+	r = tx.Create(&f)
+	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return 0
+	}
+
+	r = tx.Model(&User{Id: userId}).Update("1follow_count", gorm.Expr("follow_count+ ?", 1))
+	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return 0
+	}
+
+	r = tx.Model(&User{Id: followedUserId}).Update("follower_count", gorm.Expr("follower_count+ ?", 1))
+	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return 0
+	}
+	return f.Id
+
 }
 
-func CancelRelation(userId, followedUserId int) error {
-	if IsFollow(userId, followedUserId) {
-		tx := ORM.Where("user_id = ? and followed_user_id = ?", userId, followedUserId).Delete(&Relation{})
-		if tx.Error != nil {
-			return tx.Error
-		}
-		return nil
+func CancelRelation(userId, followedUserId int) bool {
+	if !IsFollow(userId, followedUserId) {
+		return false
 	}
-	return fmt.Errorf("has even not followed  user %d", userId)
+	tx := ORM.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	var r *gorm.DB
+	r = tx.Where("user_id=? and followed_user_id=?", userId, followedUserId).Delete(&Relation{})
+	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return false
+	}
+	r = tx.Model(&User{Id: userId}).Update("follow_count", gorm.Expr("follow_count- ?", 1))
+	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return false
+	}
+
+	r = tx.Model(&User{Id: followedUserId}).Update("follower_count", gorm.Expr("follower_count- ?", 1))
+	if r.Error != nil || r.RowsAffected == 0 {
+		tx.Rollback()
+		return false
+	}
+	return true
 }
 
 func GetRelationListByUserid(userId int) ([]Relation, error) {
