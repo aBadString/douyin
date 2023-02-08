@@ -19,7 +19,7 @@ func initRouter(router gin.IRouter) {
 
 	apiRouter := router.Group("/douyin")
 	{
-		//apiRouter.POST("/user/register/", service.Register)
+		apiRouter.POST("/user/register/", service.Register)
 		apiRouter.POST("/user/login/", service.Login)
 
 		authRouter := apiRouter.Group("/", Auth)

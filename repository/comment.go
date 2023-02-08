@@ -64,7 +64,7 @@ func InsertComment(comment Comment) (commentId int) {
 			tx.Rollback()
 		}
 	}()
-	if err := tx.Error; err != nil {
+	if tx.Error != nil {
 		return 0
 	}
 
@@ -98,7 +98,7 @@ func DeleteCommentById(comment Comment) bool {
 			tx.Rollback()
 		}
 	}()
-	if err := tx.Error; err != nil {
+	if tx.Error != nil {
 		return false
 	}
 

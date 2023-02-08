@@ -4,9 +4,42 @@ import (
 	"douyin/base"
 	"douyin/repository"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 )
+
+func Register(c *gin.Context) {
+	username := c.Query("username")
+
+	// 1. 随机生成盐, 哈希密码
+	salt := randomSalt(6)
+	password, err := generateHashFromPassword(c.Query("password"), salt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status_code": http.StatusInternalServerError,
+			"status_msg":  "注册失败",
+		})
+	}
+
+	// 2. 创建用户, 并返回 user_id
+	userId := repository.InsertUser(username, password, salt)
+	if userId == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status_code": http.StatusInternalServerError,
+			"status_msg":  "注册失败",
+		})
+	}
+
+	c.JSON(http.StatusOK, UserLoginResponse{
+		StatusCode: 0,
+		StatusMsg:  "success",
+		UserId:     userId,
+		Token:      generateToken(userId),
+	})
+}
 
 type UserLoginResponse struct {
 	StatusCode int    `json:"status_code"`
@@ -19,15 +52,12 @@ type UserLoginResponse struct {
 // 通过用户名和密码进行登录，登录成功后返回用户 id 和权限 token
 func Login(c *gin.Context) {
 	username := c.Query("username")
-	// TODO: 密码加盐后哈希
-	password := ""
 
-	// 1. 验证密码, 返回 userId
-	userId := repository.GetUserIdByUsernameAndPassword(username, password)
+	userId := checkPassword(username, c.Query("password"))
 	if userId == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"status_code": http.StatusUnauthorized,
-			"status_msg":  "User doesn't exist",
+			"status_msg":  "用户名或密码错误",
 		})
 		return
 	}
@@ -36,9 +66,84 @@ func Login(c *gin.Context) {
 		StatusCode: 0,
 		StatusMsg:  "success",
 		UserId:     userId,
-		// TODO: 生成 Token 算法
-		Token: strconv.Itoa(userId),
+		Token:      generateToken(userId),
 	})
+}
+
+func GetUserIdByToken(token string) (int, error) {
+	userId := verifyToken(token)
+	if userId == 0 {
+		return 0, base.NewError(401, "token 被篡改或者已经失效")
+	}
+	return userId, nil
+}
+
+// checkPassword 验证密码, 若正确返回 userId, 否则返回 0
+func checkPassword(username, password string) int {
+	// 1. 获取盐值, 顺便判断 username 是否存在
+	u := repository.GetUsernamePasswordByUsername(username)
+	if u.Id == 0 || u.Salt == "" || u.Password == "" {
+		return 0
+	}
+
+	// 2. 比较密码
+	if compareHashAndPassword(u.Password, password, u.Salt) {
+		return u.Id
+	} else {
+		return 0
+	}
+}
+
+func randomSalt(bit int) string {
+	const charset = "0123456789" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
+		"~!@#$%^&*()_+"
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, bit)
+
+	for i := 0; i < bit; i++ {
+		b[i] = charset[r.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// encodePassword 密码加盐后哈希
+// 相同的 password + salt 每次得到的哈希结果都不同
+func generateHashFromPassword(password, salt string) (string, error) {
+	encodedPassword, err := bcrypt.GenerateFromPassword(
+		[]byte(password+salt),
+		bcrypt.DefaultCost,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(encodedPassword), nil
+}
+
+// compareHashAndPassword 验证密码是否正确
+func compareHashAndPassword(encodedPassword, password, salt string) bool {
+	err := bcrypt.CompareHashAndPassword(
+		[]byte(encodedPassword),
+		[]byte(password+salt),
+	)
+	return err == nil
+}
+
+func generateToken(userId int) string {
+	// TODO: 生成 Token 算法
+	return strconv.Itoa(userId)
+}
+func verifyToken(token string) int {
+	// TODO: 校验 Token 算法
+	userId, err := strconv.ParseInt(token, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return int(userId)
 }
 
 type UserInfoRequest struct {
@@ -74,13 +179,4 @@ func UserInfo(userRequest UserInfoRequest) (User, error) {
 		FollowerCount: user.FollowerCount,
 		IsFollow:      isFollow,
 	}, nil
-}
-
-func GetUserIdByToken(token string) (int, error) {
-	// TODO: 校验 Token 算法
-	userId, err := strconv.ParseInt(token, 10, 64)
-	if err != nil {
-		return 0, base.NewError(401, "token 被篡改或者已经失效")
-	}
-	return int(userId), nil
 }

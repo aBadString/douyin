@@ -8,18 +8,8 @@ import (
 type User struct {
 	Id            int
 	Username      string
-	Password      string
 	FollowCount   int
 	FollowerCount int
-}
-
-// GetUserIdByUsernameAndPassword 验证用户名和密码, 如果正确返回 user_id
-func GetUserIdByUsernameAndPassword(username, password string) int {
-	var user User
-	ORM.Select("id").
-		Where("username = ? and password = ?", username, password).
-		First(&user)
-	return user.Id
 }
 
 func GetUserById(userId int) User {
@@ -54,4 +44,60 @@ func UpdateUserCount(currentUserId, toUserId, mode int) error {
 		}
 		return nil
 	})
+}
+
+type UsernamePassword struct {
+	Id       int
+	Username string
+	Password string
+	Salt     string
+}
+
+func GetUsernamePasswordByUsername(username string) UsernamePassword {
+	var user UsernamePassword
+	ORM.Select("id, username, password, salt").
+		Where("username = ?", username).
+		First(&user)
+	return user
+}
+
+func InsertUser(username, password, salt string) int {
+	tx := ORM.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if tx.Error != nil {
+		return 0
+	}
+
+	user := User{
+		Username: username,
+	}
+	tx.Create(&user)
+	if tx.Error != nil || user.Id == 0 {
+		tx.Rollback()
+		return 0
+	}
+
+	usernamePassword := UsernamePassword{
+		Id:       user.Id,
+		Username: username,
+		Password: password,
+		Salt:     salt,
+	}
+	tx.Create(&usernamePassword)
+	if tx.Error != nil {
+		tx.Rollback()
+		return 0
+	}
+
+	tx.Commit()
+	if tx.Error != nil {
+		tx.Rollback()
+		return 0
+	}
+
+	return user.Id
 }

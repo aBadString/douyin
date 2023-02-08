@@ -1,10 +1,17 @@
 create table if not exists `user` (
     `id` int primary key auto_increment comment 'user ID',
-    `username` char(32) not null unique comment '注册用户名, 最长32个字符',
-    `password` char(64) not null comment '密码, 加盐哈希后的',
+    `username` char(64) not null unique comment '注册用户名, 最长32个字符',
     `follow_count` int default 0 comment '关注总数',
     `follower_count` int default 0 comment '粉丝总数'
 ) comment '用户' engine = innodb default charset = utf8;
+
+create table if not exists `username_password` (
+    `id` int primary key comment 'user ID, vFK(user.id)',
+    `username` char(64) not null unique comment 'vFK(user.username), 冗余字段',
+    `password` char(60) not null comment '密码, 加盐哈希后的',
+    `salt` char(6) not null comment '盐值, 6 位',
+    index(`username`)
+) comment '用户=密码' engine=innodb default charset=utf8;
 
 create table if not exists `video` (
     `id` int primary key auto_increment comment 'video ID',
@@ -59,31 +66,40 @@ create table if not exists `message` (
 
 # TEST DATA
 
-insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
-    values (1, 'TEST_aBadString', '', 3, 1);
-insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
-    values (2, 'TEST_peadx', '', 2, 1);
-insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
-    values (3, 'TEST_bin', '', 1, 2);
-insert into `user` (`id`, `username`, `password`, `follow_count`, `follower_count`)
-    values (4, 'TEST_song', '', 0, 2);
+insert into `user` (`id`, `username`, `follow_count`, `follower_count`) values
+    (1, 'TEST_aBadString', 3, 1),
+    (2, 'TEST_peadx', 2, 1),
+    (3, 'TEST_bin', 1, 2),
+    (4, 'TEST_song', 0, 2);
 
-insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (1, 1, 'TEST_aBadString_video_1', 'default.mp4', 'default.png');
-insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (2, 1, 'TEST_aBadString_video_2', 'default.mp4', 'default.png');
-insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (3, 1, 'TEST_aBadString_video_3', 'default.mp4', 'default.png');
-insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (4, 2, 'TEST_peadx_video_1', 'default.mp4', 'default.png');
-insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (5, 2, 'TEST_peadx_video_2', 'default.mp4', 'default.png');
-insert into `video` (`id`, `author_id`, `title`, `data`, `cover`)
-    values (6, 2, 'TEST_peadx_video_3', 'default.mp4', 'default.png');
+insert into `username_password` (`id`, `username`, `password`, `salt`) values
+    (1, 'TEST_aBadString', '$2a$10$kWnGFTqsXTHcETyIQxvxD.iMpqrE2oMtxAAWXQPbE0JN1wC4IDn0q', 'Soo3$r'),
+    (2, 'TEST_peadx', '$2a$10$kWnGFTqsXTHcETyIQxvxD.iMpqrE2oMtxAAWXQPbE0JN1wC4IDn0q', 'Soo3$r'),
+    (3, 'TEST_bin', '$2a$10$kWnGFTqsXTHcETyIQxvxD.iMpqrE2oMtxAAWXQPbE0JN1wC4IDn0q', 'Soo3$r'),
+    (4, 'TEST_song', '$2a$10$kWnGFTqsXTHcETyIQxvxD.iMpqrE2oMtxAAWXQPbE0JN1wC4IDn0q', 'Soo3$r');
 
-insert into `relation` (`user_id`, `followed_user_id`) values (1, 2);
-insert into `relation` (`user_id`, `followed_user_id`) values (1, 3);
-insert into `relation` (`user_id`, `followed_user_id`) values (1, 4);
-insert into `relation` (`user_id`, `followed_user_id`) values (2, 1);
-insert into `relation` (`user_id`, `followed_user_id`) values (2, 3);
-insert into `relation` (`user_id`, `followed_user_id`) values (3, 4);
+insert into `video` (`id`, `author_id`, `title`, `data`, `cover`, `favorite_count`) values
+    (1, 1, 'TEST_aBadString_video_1', 'default.mp4', 'default.jpg', 4),
+    (2, 1, 'TEST_aBadString_video_2', 'default.mp4', 'default.jpg', 1),
+    (3, 1, 'TEST_aBadString_video_3', 'default.mp4', 'default.jpg', 1),
+    (4, 2, 'TEST_peadx_video_1', 'default.mp4', 'default.jpg', 1),
+    (5, 2, 'TEST_peadx_video_2', 'default.mp4', 'default.jpg', 1),
+    (6, 2, 'TEST_peadx_video_3', 'default.mp4', 'default.jpg', 0);
+
+insert into `relation` (`user_id`, `followed_user_id`) values
+    (1, 2),
+    (1, 3),
+    (1, 4),
+    (2, 1),
+    (2, 3),
+    (3, 4);
+
+insert into `favorite` (user_id, video_id) values
+    (1, 1),
+    (1, 2),
+    (1, 3),
+    (1, 4),
+    (1, 5),
+    (2, 1),
+    (3, 1),
+    (4, 1);
