@@ -73,16 +73,16 @@ func CommentAction(request CommentActionRequest) (Comment, error) {
 
 	switch request.ActionType {
 	case 1:
-		return PublishComment(request)
+		return publishComment(request)
 	case 2:
-		return DeleteComment(request)
+		return deleteComment(request)
 	default:
 		return nil, base.NewBadRequestError("action_type 值错误, 1-发布评论, 2-删除评论")
 	}
 }
 
-// PublishComment 发布评论
-func PublishComment(request CommentActionRequest) (Comment, error) {
+// publishComment 发布评论
+func publishComment(request CommentActionRequest) (Comment, error) {
 	request.CommentText = strings.TrimSpace(request.CommentText)
 	if request.CommentText == "" {
 		return nil, base.NewBadRequestError("不能发布空白评论")
@@ -102,8 +102,8 @@ func PublishComment(request CommentActionRequest) (Comment, error) {
 	return &comment, nil
 }
 
-// DeleteComment 删除评论
-func DeleteComment(request CommentActionRequest) (Comment, error) {
+// deleteComment 删除评论
+func deleteComment(request CommentActionRequest) (Comment, error) {
 	var comment = repository.GetCommentById(request.CommentId)
 	if comment.Id == 0 {
 		return nil, base.NewServerError("评论不存在")

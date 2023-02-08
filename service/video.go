@@ -162,7 +162,7 @@ func PublishVideo(c *gin.Context, request PublishRequest) error {
 	// 2. 生成视频封面
 	coverFilename := "default.jpg"
 	coverPath := filepath.Join(conf.DataPath, filename+".jpg")
-	hasCover := GenerateCover(videoPath, coverPath)
+	hasCover := generateCover(videoPath, coverPath)
 	if hasCover {
 		coverFilename = filename + ".jpg"
 	}
@@ -178,9 +178,9 @@ func PublishVideo(c *gin.Context, request PublishRequest) error {
 	return nil
 }
 
-// GenerateCover 抽取视频第一帧做为封面
+// generateCover 抽取视频第一帧做为封面
 // https://github.com/u2takey/ffmpeg-go/blob/master/examples/readFrameAsJpeg.go
-func GenerateCover(videoPath string, coverOutputPath string) bool {
+func generateCover(videoPath string, coverOutputPath string) bool {
 	// 1. 使用 ffmpeg 提取指定帧作为图像文件
 	imgBuf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(videoPath).
