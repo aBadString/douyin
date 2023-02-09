@@ -1,10 +1,10 @@
 package conf
 
-var Hostname = "http://localhost:8080"
+var Properties *ApplicationProperties
 
-const (
-	DataPath = "./public/"
-	DataUrl  = "/static/"
-)
-
-const SecretKey = "default"
+type ApplicationProperties struct {
+	DataPath  string `json:"dataPath"`
+	DataUrl   string `json:"dataUrl"`
+	SecretKey string `json:"secretKey"`
+	Hostname  string `json:"hostname"`
+}

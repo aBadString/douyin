@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"douyin/base"
+	"douyin/conf"
 	"douyin/service"
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func InitGin() *gin.Engine {
 // initRouter 初始化 Gin 的路由
 func initRouter(router gin.IRouter) {
 
-	router.Static("/static", "./public")
+	router.Static(conf.Properties.DataUrl, conf.Properties.DataPath)
 
 	apiRouter := router.Group("/douyin")
 	{

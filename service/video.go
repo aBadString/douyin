@@ -80,8 +80,8 @@ func toVideoList(currentUserId int, videos []repository.VideoWithAuthor) VideoLi
 				FollowerCount: video.FollowerCount,
 				IsFollow:      isFollowAuthor,
 			},
-			PlayUrl:       conf.Hostname + conf.DataUrl + video.Data,
-			CoverUrl:      conf.Hostname + conf.DataUrl + video.Cover,
+			PlayUrl:       conf.Properties.Hostname + conf.Properties.DataUrl + video.Data,
+			CoverUrl:      conf.Properties.Hostname + conf.Properties.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
 			IsFavorite:    isFavorite,
@@ -121,8 +121,8 @@ func PublishList(request PublishListRequest) VideoList {
 		videoList[i] = Video{
 			Id:            video.Id,
 			Author:        author,
-			PlayUrl:       conf.Hostname + conf.DataUrl + video.Data,
-			CoverUrl:      conf.Hostname + conf.DataUrl + video.Cover,
+			PlayUrl:       conf.Properties.Hostname + conf.Properties.DataUrl + video.Data,
+			CoverUrl:      conf.Properties.Hostname + conf.Properties.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,
 			CommentCount:  video.CommentCount,
 			IsFavorite:    isFavorite,
@@ -153,7 +153,7 @@ func PublishVideo(c *gin.Context, request PublishRequest) error {
 	filename := time.Now().Format("20060102") + "_" +
 		strconv.FormatInt(time.Now().Unix(), 10) + "_" +
 		file.Filename
-	videoPath := filepath.Join(conf.DataPath, filename)
+	videoPath := filepath.Join(conf.Properties.DataPath, filename)
 	err = c.SaveUploadedFile(file, videoPath)
 	if err != nil {
 		return base.NewServerError("视频上传出错")
@@ -161,7 +161,7 @@ func PublishVideo(c *gin.Context, request PublishRequest) error {
 
 	// 2. 生成视频封面
 	coverFilename := "default.jpg"
-	coverPath := filepath.Join(conf.DataPath, filename+".jpg")
+	coverPath := filepath.Join(conf.Properties.DataPath, filename+".jpg")
 	hasCover := generateCover(videoPath, coverPath)
 	if hasCover {
 		coverFilename = filename + ".jpg"

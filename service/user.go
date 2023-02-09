@@ -162,11 +162,11 @@ type claims struct {
 func generateToken(userId int) (string, error) {
 	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
 		StandardClaims: jwt.StandardClaims{
-			Issuer:    conf.Hostname,
+			Issuer:    conf.Properties.Hostname,
 			ExpiresAt: time.Now().Add(72 * time.Hour).Unix(),
 		},
 		UserId: userId,
-	}).SignedString([]byte(conf.SecretKey))
+	}).SignedString([]byte(conf.Properties.SecretKey))
 
 	if err != nil {
 		return "", err
@@ -176,7 +176,7 @@ func generateToken(userId int) (string, error) {
 
 func verifyToken(token string) int {
 	_token, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(conf.SecretKey), nil
+		return []byte(conf.Properties.SecretKey), nil
 	})
 	if err != nil {
 		return 0
