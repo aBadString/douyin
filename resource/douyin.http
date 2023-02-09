@@ -1,0 +1,59 @@
+### 用户信息
+GET http://localhost:8080/douyin/user
+###
+GET http://localhost:8080/douyin/user?user_id=3
+###
+GET http://localhost:8080/douyin/user?user_id=-1
+###
+GET http://localhost:8080/douyin/user?user_id=3&token=2
+
+### 视频流接口
+GET http://localhost:8080/douyin
+###
+GET http://localhost:8080/douyin/feed?latest_time=1675675868
+###
+GET http://localhost:8080/douyin/feed?token=1
+###
+GET http://localhost:8080/douyin/feed?token=1&latest_time=1675675868
+
+### 发布列表
+GET http://localhost:8080/douyin/publish/list
+###
+GET http://localhost:8080/douyin/publish/list?user_id=3
+###
+GET http://localhost:8080/douyin/publish/list?user_id=3&token=2
+
+### 喜欢列表
+GET http://localhost:8080/douyin/favorite/list
+###
+GET http://localhost:8080/douyin/favorite/list?user_id=1
+###
+GET http://localhost:8080/douyin/favorite/list?user_id=1&token=2
+
+### 评论列表
+GET http://localhost:8080/douyin/comment/list
+###
+GET http://localhost:8080/douyin/comment/list?video_id=1
+###
+GET http://localhost:8080/douyin/comment/list?video_id=1&token=2
+
+### 评论操作
+POST http://localhost:8080/douyin/comment/action
+###
+POST http://localhost:8080/douyin/comment/action?token=1
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=-1
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=3
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=aaa
+### TODO 评论没有内容, 过滤非法字符
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=1
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=1&comment_text=hello
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=2&comment_id=-1
+###
+POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=2&comment_id=28
