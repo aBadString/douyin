@@ -228,7 +228,7 @@ func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []strin
 	} else {
 		// 2.2. 有错误
 		if len(errorList) == 1 {
-			c.JSON(errorList[0].code, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"status_code": errorList[0].code,
 				"status_msg":  errorList[0].message,
 			})
@@ -237,7 +237,7 @@ func response(c *gin.Context, retValues []reflect.Value, retTypeNameList []strin
 			for i, err := range errorList {
 				errorMessages[i] = err.message
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusOK, gin.H{
 				"status_code": http.StatusInternalServerError,
 				"status_msg":  errorMessages,
 			})

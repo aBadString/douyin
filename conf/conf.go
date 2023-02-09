@@ -6,3 +6,5 @@ const (
 	DataPath = "./public/"
 	DataUrl  = "/static/"
 )
+
+const SecretKey = "default"

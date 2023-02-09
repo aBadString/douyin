@@ -7,6 +7,7 @@ require (
 	gorm.io/driver/mysql v1.4.5
 	gorm.io/gorm v1.24.5
 	github.com/u2takey/ffmpeg-go v0.4.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 )
 
 require (

@@ -2,12 +2,13 @@ package service
 
 import (
 	"douyin/base"
+	"douyin/conf"
 	"douyin/repository"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -18,26 +19,37 @@ func Register(c *gin.Context) {
 	salt := randomSalt(6)
 	password, err := generateHashFromPassword(c.Query("password"), salt)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"status_code": http.StatusInternalServerError,
 			"status_msg":  "注册失败",
 		})
+		return
 	}
 
 	// 2. 创建用户, 并返回 user_id
 	userId := repository.InsertUser(username, password, salt)
 	if userId == 0 {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"status_code": http.StatusInternalServerError,
-			"status_msg":  "注册失败",
+			"status_msg":  "注册失败, 用户已经存在",
 		})
+		return
+	}
+
+	token, err := generateToken(userId)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status_code": http.StatusInternalServerError,
+			"status_msg":  "Token 生成失败",
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, UserLoginResponse{
 		StatusCode: 0,
 		StatusMsg:  "success",
 		UserId:     userId,
-		Token:      generateToken(userId),
+		Token:      token,
 	})
 }
 
@@ -55,9 +67,18 @@ func Login(c *gin.Context) {
 
 	userId := checkPassword(username, c.Query("password"))
 	if userId == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"status_code": http.StatusUnauthorized,
 			"status_msg":  "用户名或密码错误",
+		})
+		return
+	}
+
+	token, err := generateToken(userId)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status_code": http.StatusInternalServerError,
+			"status_msg":  "Token 生成失败",
 		})
 		return
 	}
@@ -66,7 +87,7 @@ func Login(c *gin.Context) {
 		StatusCode: 0,
 		StatusMsg:  "success",
 		UserId:     userId,
-		Token:      generateToken(userId),
+		Token:      token,
 	})
 }
 
@@ -133,17 +154,40 @@ func compareHashAndPassword(encodedPassword, password, salt string) bool {
 	return err == nil
 }
 
-func generateToken(userId int) string {
-	// TODO: 生成 Token 算法
-	return strconv.Itoa(userId)
+type claims struct {
+	jwt.StandardClaims
+	UserId int
 }
+
+func generateToken(userId int) (string, error) {
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
+		StandardClaims: jwt.StandardClaims{
+			Issuer:    conf.Hostname,
+			ExpiresAt: time.Now().Add(72 * time.Hour).Unix(),
+		},
+		UserId: userId,
+	}).SignedString([]byte(conf.SecretKey))
+
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 func verifyToken(token string) int {
-	// TODO: 校验 Token 算法
-	userId, err := strconv.ParseInt(token, 10, 64)
+	_token, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(conf.SecretKey), nil
+	})
 	if err != nil {
 		return 0
 	}
-	return int(userId)
+
+	_claims, ok := _token.Claims.(*claims)
+	if !ok || !_token.Valid {
+		return 0
+	}
+
+	return _claims.UserId
 }
 
 type UserInfoRequest struct {

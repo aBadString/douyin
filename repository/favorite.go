@@ -43,7 +43,7 @@ func CreateFavorite(userId, videoId int) int {
 	}()
 
 	var r *gorm.DB
-	fav := Favorite{UserId: userId, VideoId: userId, Time: time.Now()}
+	fav := Favorite{UserId: userId, VideoId: videoId, Time: time.Now()}
 	r = tx.Create(&fav)
 	if r.Error != nil || r.RowsAffected == 0 {
 		tx.Rollback()
