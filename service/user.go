@@ -7,7 +7,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
-	"math/rand"
 	"net/http"
 	"time"
 )
@@ -15,9 +14,8 @@ import (
 func Register(c *gin.Context) {
 	username := c.Query("username")
 
-	// 1. 随机生成盐, 哈希密码
-	salt := randomSalt(6)
-	password, err := generateHashFromPassword(c.Query("password"), salt)
+	// 1. 密码加盐哈希
+	password, err := generateHashFromPassword(c.Query("password"))
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status_code": http.StatusInternalServerError,
@@ -27,7 +25,7 @@ func Register(c *gin.Context) {
 	}
 
 	// 2. 创建用户, 并返回 user_id
-	userId := repository.InsertUser(username, password, salt)
+	userId := repository.InsertUser(username, password)
 	if userId == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"status_code": http.StatusInternalServerError,
@@ -101,40 +99,30 @@ func GetUserIdByToken(token string) (int, error) {
 
 // checkPassword 验证密码, 若正确返回 userId, 否则返回 0
 func checkPassword(username, password string) int {
-	// 1. 获取盐值, 顺便判断 username 是否存在
+	// 1. 获取哈希后的密码, 顺便判断 username 是否存在
 	u := repository.GetUsernamePasswordByUsername(username)
-	if u.Id == 0 || u.Salt == "" || u.Password == "" {
+	if u.Id == 0 || u.Password == "" {
 		return 0
 	}
 
 	// 2. 比较密码
-	if compareHashAndPassword(u.Password, password, u.Salt) {
+	err := bcrypt.CompareHashAndPassword(
+		[]byte(u.Password),
+		[]byte(password),
+	)
+
+	if err == nil {
 		return u.Id
 	} else {
 		return 0
 	}
 }
 
-func randomSalt(bit int) string {
-	const charset = "0123456789" +
-		"abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" +
-		"~!@#$%^&*()_+"
-
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, bit)
-
-	for i := 0; i < bit; i++ {
-		b[i] = charset[r.Intn(len(charset))]
-	}
-	return string(b)
-}
-
 // encodePassword 密码加盐后哈希
-// 相同的 password + salt 每次得到的哈希结果都不同
-func generateHashFromPassword(password, salt string) (string, error) {
+// 相同的 password 加盐后每次得到的哈希结果都不同
+func generateHashFromPassword(password string) (string, error) {
 	encodedPassword, err := bcrypt.GenerateFromPassword(
-		[]byte(password+salt),
+		[]byte(password),
 		bcrypt.DefaultCost,
 	)
 
@@ -143,15 +131,6 @@ func generateHashFromPassword(password, salt string) (string, error) {
 	}
 
 	return string(encodedPassword), nil
-}
-
-// compareHashAndPassword 验证密码是否正确
-func compareHashAndPassword(encodedPassword, password, salt string) bool {
-	err := bcrypt.CompareHashAndPassword(
-		[]byte(encodedPassword),
-		[]byte(password+salt),
-	)
-	return err == nil
 }
 
 type claims struct {

@@ -8,6 +8,7 @@ require (
 	gorm.io/gorm v1.24.5
 	github.com/u2takey/ffmpeg-go v0.4.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	golang.org/x/crypto v0.5.0
 )
 
 require (
@@ -30,7 +31,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	github.com/ugorji/go/codec v1.2.8 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.6.0 // indirect
