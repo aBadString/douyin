@@ -19,8 +19,8 @@ func ExampleHandlerFuncConverter() {
 }
 
 type User struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+	Name string `query:"name"`
+	Age  int    `query:"age"`
 }
 
 func DefaultHandler(c *gin.Context) {
