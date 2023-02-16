@@ -16,12 +16,15 @@ COPY src .
 
 # 换源, 安装 ffmpeg
 RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && \
-    apt update && \
-    apt install ffmpeg
+    apt -y update && \
+    apt -y install ffmpeg
 
 # 下载依赖和编译
 RUN go mod tidy
 RUN go build -o /go/bin/douyin  # /go/bin 在环境变量 PATH 中
 
+# 挂载卷
+VOLUME ["/etc/douyin", "/var/lib/douyin"]
+
 # 运行容器时执行
-ENTRYPOINT ["douyin"]
+ENTRYPOINT ["douyin", "/etc/douyin/app.json"]

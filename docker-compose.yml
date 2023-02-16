@@ -8,8 +8,10 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./conf/app.json:/go/bin/app.json
+      - ./conf:/etc/douyin
       - ./data:/var/lib/douyin
+    #command:
+    #  - "/go/bin/douyin /etc/douyin/app.json"
     networks:
       - middleware_default
 
