@@ -8,7 +8,7 @@ GET http://localhost:8080/douyin/user?user_id=-1
 GET http://localhost:8080/douyin/user?user_id=3&token=2
 
 ### 视频流接口
-GET http://localhost:8080/douyin
+GET http://localhost:8080/douyin/feed
 ###
 GET http://localhost:8080/douyin/feed?latest_time=1675675868
 ###

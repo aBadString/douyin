@@ -1,0 +1,18 @@
+version : '3.3'
+services:
+  douyin:
+    container_name: douyin
+    image: douyin:latest
+    build:
+      context: .  # ./Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./conf/app.json:/go/bin/app.json
+      - ./data:/var/lib/douyin
+    networks:
+      - middleware_default
+
+networks:
+  middleware_default:
+    external: true
