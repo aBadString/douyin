@@ -46,6 +46,7 @@ func toComment(currentUserId, videoId int, comment repository.CommentWithUser) C
 			FollowCount:   comment.FollowCount,
 			FollowerCount: comment.FollowerCount,
 			IsFollow:      isFollow,
+			Avatar:        comment.Avatar,
 		},
 		Content:    comment.CommentText,
 		CreateDate: comment.Time.Format("2006-01-02"),

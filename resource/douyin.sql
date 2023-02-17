@@ -3,7 +3,8 @@ create table if not exists `user` (
     `username` char(64) not null unique comment '注册用户名, 最长32个字符',
     `password` char(60) not null comment '密码, 加盐哈希后的',
     `follow_count` int default 0 comment '关注总数',
-    `follower_count` int default 0 comment '粉丝总数'
+    `follower_count` int default 0 comment '粉丝总数',
+    `avatar` varchar(255) comment '头像, URL'
     # index(`username`) # unique 约束会创建一个唯一索引
 ) comment '用户' engine = innodb default charset = utf8;
 

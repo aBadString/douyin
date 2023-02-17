@@ -38,6 +38,7 @@ type VideoWithAuthor struct {
 	Username      string
 	FollowCount   int
 	FollowerCount int
+	Avatar        string
 }
 
 func GetVideoListOrderTime(time time.Time, count int) []VideoWithAuthor {
@@ -45,7 +46,7 @@ func GetVideoListOrderTime(time time.Time, count int) []VideoWithAuthor {
 	ORM.Raw(
 		"select "+
 			"time, video.id as id, title, data, cover, favorite_count, comment_count,"+
-			"user.id as author_id, username, follow_count, follower_count "+
+			"user.id as author_id, username, follow_count, follower_count, avatar "+
 			"from video join user on video.author_id = user.id "+
 			"where time < ? "+
 			"order by time desc "+
@@ -60,7 +61,7 @@ func GetVideoListIn(videoIds []int) []VideoWithAuthor {
 	ORM.Raw(
 		"select "+
 			"video.id as id, title, data, cover, favorite_count, comment_count,"+
-			"user.id as author_id, username, follow_count, follower_count "+
+			"user.id as author_id, username, follow_count, follower_count, avatar "+
 			"from video join user on video.author_id = user.id "+
 			"where video.id in ? ",
 		videoIds,

@@ -79,6 +79,7 @@ func toVideoList(currentUserId int, videos []repository.VideoWithAuthor) VideoLi
 				FollowCount:   video.FollowCount,
 				FollowerCount: video.FollowerCount,
 				IsFollow:      isFollowAuthor,
+				Avatar:        video.Avatar,
 			},
 			PlayUrl:       conf.Properties.Hostname + conf.Properties.DataUrl + video.Data,
 			CoverUrl:      conf.Properties.Hostname + conf.Properties.DataUrl + video.Cover,

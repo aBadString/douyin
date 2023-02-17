@@ -109,5 +109,6 @@ func makeUser(userId, currentUserId int) *User {
 		FollowCount:   user.FollowCount,
 		FollowerCount: user.FollowerCount,
 		IsFollow:      repository.IsFollow(currentUserId, user.Id),
+		Avatar:        user.Avatar,
 	}
 }

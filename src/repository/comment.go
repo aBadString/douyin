@@ -18,11 +18,12 @@ type CommentWithUser struct {
 	Username      string
 	FollowCount   int
 	FollowerCount int
+	Avatar        string
 }
 
 var CommentWithUserViewSql = "select " +
 	"comment.id, comment_text, time, " +
-	"user_id, username, follow_count, follower_count " +
+	"user_id, username, follow_count, follower_count, avatar " +
 	"from comment join user on user.id = comment.user_id "
 
 func GetCommentListByVideoId(videoId int) []CommentWithUser {

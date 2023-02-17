@@ -180,6 +180,7 @@ type User struct {
 	FollowCount   int    `json:"follow_count"`
 	FollowerCount int    `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
+	Avatar        string `json:"avatar"`
 }
 
 // UserInfo 用户信息
@@ -201,5 +202,6 @@ func UserInfo(userRequest UserInfoRequest) (User, error) {
 		FollowCount:   user.FollowCount,
 		FollowerCount: user.FollowerCount,
 		IsFollow:      isFollow,
+		Avatar:        user.Avatar,
 	}, nil
 }

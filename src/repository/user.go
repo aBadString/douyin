@@ -6,11 +6,12 @@ type User struct {
 	FollowCount   int
 	FollowerCount int
 	Password      string
+	Avatar        string
 }
 
 func GetUserById(userId int) User {
 	var user User
-	ORM.Select("id, username, follow_count, follower_count").
+	ORM.Select("id, username, follow_count, follower_count, avatar").
 		Where("id = ?", userId).
 		First(&user)
 	return user
