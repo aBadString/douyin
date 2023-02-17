@@ -3,6 +3,8 @@ package service
 import (
 	"douyin/base"
 	"douyin/repository"
+	"douyin/singleflight"
+	"strconv"
 )
 
 type FavoriteListRequest struct {
@@ -22,21 +24,27 @@ func FavoriteList(request FavoriteListRequest) VideoList {
 	return toVideoList(request.CurrentUserId, videos)
 }
 
-func FavoriteAction(request FavoriteActionRequest) error {
-	if request.CurrentUserId == 0 {
+func FavoriteAction(r FavoriteActionRequest) error {
+	if r.CurrentUserId == 0 {
 		return base.NewUnauthorizedError()
 	}
-	switch request.ActionType {
+	switch r.ActionType {
 	case 1:
-		if repository.CreateFavorite(request.CurrentUserId, request.VideoId) == 0 {
-			return base.NewServerError("点赞失败")
-		}
+		return singleflight.DefaultGroup.Do(strconv.Itoa(r.CurrentUserId)+"favorite"+strconv.Itoa(r.VideoId), func() error {
+			if repository.CreateFavorite(r.CurrentUserId, r.VideoId) == 0 {
+				return base.NewServerError("点赞失败")
+			}
+			return nil
+		})
+
 	case 2:
-		if !repository.CancelFavorite(request.CurrentUserId, request.VideoId) {
-			return base.NewServerError("取消点赞失败")
-		}
+		return singleflight.DefaultGroup.Do(strconv.Itoa(r.CurrentUserId)+"cancel_favorite"+strconv.Itoa(r.VideoId), func() error {
+			if !repository.CancelFavorite(r.CurrentUserId, r.VideoId) {
+				return base.NewServerError("取消点赞失败")
+			}
+			return nil
+		})
 	default:
 		return base.NewServerError("非法的action_type")
 	}
-	return nil
 }

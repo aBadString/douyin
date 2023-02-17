@@ -3,6 +3,8 @@ package service
 import (
 	"douyin/base"
 	"douyin/repository"
+	"douyin/singleflight"
+	"strconv"
 )
 
 type ActionRequest struct {
@@ -26,17 +28,23 @@ func RelationAction(r ActionRequest) error {
 	//判断操作类型：1 关注； 2 取关； 其他报错
 	switch r.ActionType {
 	case 1:
-		if repository.CreateRelation(r.CurrentUserId, r.ToUserId) == 0 {
-			return base.NewServerError("关注失败")
-		}
+		return singleflight.DefaultGroup.Do(strconv.Itoa(r.CurrentUserId)+"follow"+strconv.Itoa(r.ToUserId), func() error {
+			if repository.CreateRelation(r.CurrentUserId, r.ToUserId) == 0 {
+				return base.NewServerError("关注失败")
+			}
+			return nil
+		})
 	case 2:
-		if !repository.CancelRelation(r.CurrentUserId, r.ToUserId) {
-			return base.NewServerError("取关失败")
-		}
+		return singleflight.DefaultGroup.Do(strconv.Itoa(r.CurrentUserId)+"cancel_follow"+strconv.Itoa(r.ToUserId), func() error {
+			if !repository.CancelRelation(r.CurrentUserId, r.ToUserId) {
+				return base.NewServerError("取关失败")
+			}
+			return nil
+		})
+
 	default:
 		return base.NewServerError("非法的action_type")
 	}
-	return nil
 }
 
 func FollowList(lr ListRequest) (UserList, error) {
