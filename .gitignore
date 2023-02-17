@@ -1,7 +1,6 @@
 .idea/
 *.iml
 
+conf/
 data/
 go.sum
-
-app.json

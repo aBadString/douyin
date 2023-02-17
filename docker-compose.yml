@@ -10,6 +10,8 @@ services:
     volumes:
       - ./conf:/etc/douyin
       - ./data:/var/lib/douyin
+    environment:
+      GIN_MODE: release
     #command:
     #  - "/go/bin/douyin /etc/douyin/app.json"
     networks:
