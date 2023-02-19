@@ -60,27 +60,31 @@ func Feed(request FeedRequest) (NextTime, VideoList) {
 	return NextTime(nextTime), videoList
 }
 
-func toVideoList(currentUserId int, videos []repository.VideoWithAuthor) VideoList {
+func toVideoList(currentUserId int, videos []repository.Video) VideoList {
+	userMap := make(map[int]User, len(videos))
+
 	var videoList = make(VideoList, len(videos))
 	for i, video := range videos {
-		// 1. 当前用户是否关注了该视频的作者, 是否点赞了该视频
-		isFollowAuthor, isFavorite := false, false
+		// 1. 当前用户是否关注了该视频的作者
+		isFavorite := false
 		if currentUserId != 0 {
-			isFollowAuthor = repository.IsFollow(currentUserId, video.AuthorId)
 			isFavorite = repository.IsFavorite(currentUserId, video.Id)
 		}
 
-		// 2. 重构返回数据格式
+		// 2. 获取视频作者信息
+		user, exist := userMap[video.AuthorId]
+		if !exist {
+			user, _ = UserInfo(UserInfoRequest{
+				UserId:        video.AuthorId,
+				CurrentUserId: currentUserId,
+			})
+			userMap[user.Id] = user
+		}
+
+		// 3. 重构返回数据格式
 		videoList[i] = Video{
-			Id: video.Id,
-			Author: User{
-				Id:            video.AuthorId,
-				Name:          video.Username,
-				FollowCount:   video.FollowCount,
-				FollowerCount: video.FollowerCount,
-				IsFollow:      isFollowAuthor,
-				Avatar:        video.Avatar,
-			},
+			Id:            video.Id,
+			Author:        user,
 			PlayUrl:       conf.Properties.Hostname + conf.Properties.DataUrl + video.Data,
 			CoverUrl:      conf.Properties.Hostname + conf.Properties.DataUrl + video.Cover,
 			FavoriteCount: video.FavoriteCount,
@@ -101,7 +105,7 @@ type PublishListRequest struct {
 // 用户的视频发布列表，直接列出用户所有投稿过的视频
 func PublishList(request PublishListRequest) VideoList {
 	// 1. 查询作者信息
-	author, err := UserBaseInfo(UserInfoRequest{
+	author, err := UserInfo(UserInfoRequest{
 		UserId:        request.UserId,
 		CurrentUserId: request.CurrentUserId,
 	})

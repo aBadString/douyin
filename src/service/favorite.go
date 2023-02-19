@@ -2,6 +2,7 @@ package service
 
 import (
 	"douyin/base"
+	"douyin/conf"
 	"douyin/repository"
 	"douyin/singleflight"
 	"strconv"
@@ -21,7 +22,30 @@ type FavoriteActionRequest struct {
 func FavoriteList(request FavoriteListRequest) VideoList {
 	videoIds := repository.GetVideoIdsByUserId(request.UserId)
 	videos := repository.GetVideoListIn(videoIds)
-	return toVideoList(request.CurrentUserId, videos)
+	return videoWithAuthorToVideoList(request.CurrentUserId, videos)
+}
+
+func videoWithAuthorToVideoList(currentUserId int, videos []repository.VideoWithAuthor) VideoList {
+	var videoList = make(VideoList, len(videos))
+	for i, video := range videos {
+		// 1. 当前用户是否关注了该视频的作者, 是否点赞了该视频
+		isFavorite := false
+		if currentUserId != 0 {
+			isFavorite = repository.IsFavorite(currentUserId, video.Id)
+		}
+
+		// 2. 重构返回数据格式
+		videoList[i] = Video{
+			Id:            video.Id,
+			PlayUrl:       conf.Properties.Hostname + conf.Properties.DataUrl + video.Data,
+			CoverUrl:      conf.Properties.Hostname + conf.Properties.DataUrl + video.Cover,
+			FavoriteCount: video.FavoriteCount,
+			CommentCount:  video.CommentCount,
+			IsFavorite:    isFavorite,
+			Title:         video.Title,
+		}
+	}
+	return videoList
 }
 
 func FavoriteAction(r FavoriteActionRequest) error {

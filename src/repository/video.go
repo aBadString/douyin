@@ -3,6 +3,7 @@ package repository
 import "time"
 
 type Video struct {
+	Time          time.Time
 	Id            int
 	AuthorId      int
 	Title         string
@@ -41,13 +42,13 @@ type VideoWithAuthor struct {
 	Avatar        string
 }
 
-func GetVideoListOrderTime(time time.Time, count int) []VideoWithAuthor {
-	var v []VideoWithAuthor
+func GetVideoListOrderTime(time time.Time, count int) []Video {
+	var v []Video
 	ORM.Raw(
 		"select "+
-			"time, video.id as id, title, data, cover, favorite_count, comment_count,"+
-			"user.id as author_id, username, follow_count, follower_count, avatar "+
-			"from video join user on video.author_id = user.id "+
+			"time, id, title, data, cover, favorite_count, comment_count,"+
+			"author_id "+
+			"from video "+
 			"where time < ? "+
 			"order by time desc "+
 			"limit ?",
