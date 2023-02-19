@@ -57,3 +57,10 @@ POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=
 POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=2&comment_id=-1
 ###
 POST http://localhost:8080/douyin/comment/action?token=1&video_id=1&action_type=2&comment_id=28
+
+### 登录
+POST http://localhost:8080/douyin/user/login/?username=aBadString&password=123456
+
+### 聊天记录
+GET http://localhost:8080/douyin/message/chat/?token=1&to_user_id=8
+

@@ -3,6 +3,7 @@ package service
 import (
 	"douyin/base"
 	"douyin/repository"
+	"sort"
 )
 
 type Message struct {
@@ -39,12 +40,29 @@ func MessageAction(msg MessageRequest) error {
 app前端暂时没有成功显示
 */
 func MessageChat(ml MessageListRequest) (MessageList, error) {
-
 	if ml.CurrentUserId == 0 {
 		return nil, base.NewUnauthorizedError()
 	}
 
-	msgList, err := repository.GetMessageListFromSIdToRId(ml.CurrentUserId, ml.ToUserId, ml.PreMsgTime)
+	msgList1, err := getSingleMessage(ml.CurrentUserId, ml.ToUserId, ml.PreMsgTime)
+	if err != nil {
+		return nil, err
+	}
+	msgList2, err := getSingleMessage(ml.ToUserId, ml.CurrentUserId, ml.PreMsgTime)
+	if err != nil {
+		return nil, err
+	}
+
+	var msgList = append(msgList1, msgList2...)
+	sort.Slice(msgList, func(i, j int) bool {
+		return msgList[i].CreateTime < msgList[j].CreateTime
+	})
+
+	return msgList, nil
+}
+
+func getSingleMessage(from, to int, preMsgTime int64) (MessageList, error) {
+	msgList, err := repository.GetMessageListFromSIdToRId(from, to, preMsgTime)
 	if err != nil {
 		return nil, err
 	}
