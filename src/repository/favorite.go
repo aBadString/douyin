@@ -87,3 +87,10 @@ func CancelFavorite(userId, videoId int) bool {
 	}
 	return true
 }
+
+func CountFavoriteByUserId(userId int) int {
+	var n int64
+	ORM.Model(&Favorite{}).Where("user_id = ?", userId).
+		Count(&n)
+	return int(n)
+}

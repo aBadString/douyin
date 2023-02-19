@@ -76,3 +76,10 @@ func ExistVideoById(videoId int) bool {
 		First(&v)
 	return v.Id != 0
 }
+
+func CountVideoByAuthorId(authorId int) int {
+	var n int64
+	ORM.Model(&Video{}).Where("author_id = ?", authorId).
+		Count(&n)
+	return int(n)
+}

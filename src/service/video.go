@@ -101,7 +101,7 @@ type PublishListRequest struct {
 // 用户的视频发布列表，直接列出用户所有投稿过的视频
 func PublishList(request PublishListRequest) VideoList {
 	// 1. 查询作者信息
-	author, err := UserInfo(UserInfoRequest{
+	author, err := UserBaseInfo(UserInfoRequest{
 		UserId:        request.UserId,
 		CurrentUserId: request.CurrentUserId,
 	})

@@ -175,17 +175,37 @@ type UserInfoRequest struct {
 }
 
 type User struct {
-	Id            int    `json:"id"`
-	Name          string `json:"name"`
-	FollowCount   int    `json:"follow_count"`
-	FollowerCount int    `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
-	Avatar        string `json:"avatar"`
+	Id              int    `json:"id"`
+	Name            string `json:"name"`
+	FollowCount     int    `json:"follow_count"`
+	FollowerCount   int    `json:"follower_count"`
+	IsFollow        bool   `json:"is_follow"`
+	Avatar          string `json:"avatar"`
+	BackgroundImage string `json:"background_image,omitempty"` //用户个人页顶部大图
+	Signature       string `json:"signature,omitempty"`        //个人简介
+	TotalFavorited  int    `json:"total_favorited,omitempty"`  //获赞数量
+	WorkCount       int    `json:"work_count,omitempty"`       //作品数量
+	FavoriteCount   int    `json:"favorite_count,omitempty"`   //点赞数量
 }
 
 // UserInfo 用户信息
 // 获取用户的 id、昵称，如果实现社交部分的功能，还会返回关注数和粉丝数
 func UserInfo(userRequest UserInfoRequest) (User, error) {
+	user, err := UserBaseInfo(userRequest)
+	if err != nil {
+		return User{}, err
+	}
+
+	user.BackgroundImage = ""
+	user.Signature = "这个人太懒了，还什么都没写呢~"
+	user.TotalFavorited = 666
+
+	user.WorkCount = repository.CountVideoByAuthorId(user.Id)
+	user.FavoriteCount = repository.CountFavoriteByUserId(user.Id)
+	return user, nil
+}
+
+func UserBaseInfo(userRequest UserInfoRequest) (User, error) {
 	var user = repository.GetUserById(userRequest.UserId)
 	if user.Id == 0 {
 		return User{}, base.NewNotFoundError("用户不存在")
