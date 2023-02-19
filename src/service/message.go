@@ -3,7 +3,6 @@ package service
 import (
 	"douyin/base"
 	"douyin/repository"
-	"time"
 )
 
 type Message struct {
@@ -11,7 +10,7 @@ type Message struct {
 	FromUserId int    `json:"from_user_id"`
 	ToUserId   int    `json:"to_user_id"`
 	Content    string `json:"content"`
-	CreateTime string `json:"create_time"`
+	CreateTime int64  `json:"create_time"`
 }
 type MessageRequest struct {
 	CurrentUserId int    `context:"current_user_id"`
@@ -21,8 +20,9 @@ type MessageRequest struct {
 }
 
 type MessageListRequest struct {
-	CurrentUserId int `context:"current_user_id"`
-	ToUserId      int `query:"to_user_id"`
+	CurrentUserId int   `context:"current_user_id"`
+	ToUserId      int   `query:"to_user_id"`
+	PreMsgTime    int64 `query:"pre_msg_time"`
 }
 
 type MessageList []*Message
@@ -43,7 +43,8 @@ func MessageChat(ml MessageListRequest) (MessageList, error) {
 	if ml.CurrentUserId == 0 {
 		return nil, base.NewUnauthorizedError()
 	}
-	msgList, err := repository.GetMessageListFromSIdToRId(ml.CurrentUserId, ml.ToUserId)
+
+	msgList, err := repository.GetMessageListFromSIdToRId(ml.CurrentUserId, ml.ToUserId, ml.PreMsgTime)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func MessageChat(ml MessageListRequest) (MessageList, error) {
 			FromUserId: message.SendUserId,
 			ToUserId:   message.ReceiveUserId,
 			Content:    message.Content,
-			CreateTime: time.Unix(message.Time.Unix(), 0).Format("2006-01-02 15:04:05"),
+			CreateTime: message.Time.UnixMilli(),
 		}
 	}
 	return msgListResp, nil

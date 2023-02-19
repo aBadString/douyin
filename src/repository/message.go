@@ -24,9 +24,9 @@ func CreateMessage(sendUserId, receiveUserId int, content string) (int, error) {
 	return message.Id, nil
 }
 
-func GetMessageListFromSIdToRId(sendUserId, receiveUserId int) ([]Message, error) {
+func GetMessageListFromSIdToRId(sendUserId, receiveUserId int, PreMsgTime int64) ([]Message, error) {
 	messageList := make([]Message, 0)
-	tx := ORM.Where("send_user_id=? and receive_user_id=?", sendUserId, receiveUserId).Find(&messageList)
+	tx := ORM.Where("send_user_id=? and receive_user_id=? and time> ?", sendUserId, receiveUserId, time.UnixMilli(PreMsgTime)).Find(&messageList)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
