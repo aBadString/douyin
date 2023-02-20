@@ -23,7 +23,14 @@ func GetVideoListByAuthorId(authorId int) []Video {
 	return videos
 }
 
-func InsertVideo(video Video) {
+type InsertVideoModel struct {
+	AuthorId int
+	Title    string
+	Data     string
+	Cover    string
+}
+
+func InsertVideo(video InsertVideoModel) {
 	ORM.Save(&video)
 }
 

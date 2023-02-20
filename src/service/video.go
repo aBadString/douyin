@@ -173,7 +173,7 @@ func PublishVideo(c *gin.Context, request PublishRequest) error {
 	}
 
 	// 3. 保存视频信息到数据库
-	repository.InsertVideo(repository.Video{
+	repository.InsertVideo(repository.InsertVideoModel{
 		AuthorId: request.CurrentUserId,
 		Title:    request.Title,
 		Data:     filename,
