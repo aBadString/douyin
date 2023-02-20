@@ -78,7 +78,6 @@ func HandlerFuncConverter(f any) gin.HandlerFunc {
 
 		// 2. 调用函数 f
 		var retValues []reflect.Value = theF.Call(params)
-		_ = retValues
 
 		// 3. 返回值处理
 

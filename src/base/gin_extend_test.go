@@ -38,3 +38,58 @@ func PlusHandler(user User) User {
 	user.Age++
 	return user
 }
+
+func ExampleParam() {
+	var ginEngine *gin.Engine = gin.Default()
+	ginEngine.Use(func(context *gin.Context) {
+		context.Set("context", "hello")
+	}).GET("/example/param", HandlerFuncConverter(ParamHandler))
+	_ = ginEngine.Run()
+	// Output:
+	// http://localhost:8080/example/param?query=abc
+}
+
+type Param struct {
+	Query   string `query:"query"`
+	Context string `context:"context"`
+}
+
+func ParamHandler(p Param) Param {
+	return p
+}
+
+func ExampleMultipleReturnValues() {
+	var ginEngine *gin.Engine = gin.Default()
+	ginEngine.GET("/example/multiple_return", HandlerFuncConverter(MultipleReturnHandler))
+	_ = ginEngine.Run()
+	// Output:
+	// http://localhost:8080/example/multiple_return
+}
+
+type Code int
+type DataData struct {
+	Name string
+	Age  int
+}
+
+func MultipleReturnHandler() (Code, DataData) {
+	return 1, DataData{
+		Name: "name",
+		Age:  19,
+	}
+}
+
+func ExampleError() {
+	var ginEngine *gin.Engine = gin.Default()
+	ginEngine.GET("/example/error", HandlerFuncConverter(ErrorHandler))
+	_ = ginEngine.Run()
+	// Output:
+	// http://localhost:8080/example/error
+}
+
+func ErrorHandler() (DataData, error) {
+	return DataData{
+		Name: "name",
+		Age:  19,
+	}, NewError(418, "出错了！")
+}
