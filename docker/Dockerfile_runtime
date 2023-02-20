@@ -1,0 +1,11 @@
+FROM debian:latest
+
+# 设置时区
+RUN echo "Asia/Shanghai" > /etc/timezone && \
+    rm /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+# 换源, 安装 ffmpeg
+RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && \
+    apt -y update && \
+    apt -y install ffmpeg

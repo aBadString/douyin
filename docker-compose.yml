@@ -6,12 +6,10 @@ services:
     build:
       context: .  # ./Dockerfile
     ports:
-      - "8080:8080"
+      - "60000:60000"
     volumes:
       - ./conf:/etc/douyin
       - ./data:/var/lib/douyin
-    environment:
-      GIN_MODE: release
     #command:
     #  - "/go/bin/douyin /etc/douyin/app.json"
     networks:

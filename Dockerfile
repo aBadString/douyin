@@ -1,32 +1,13 @@
-FROM golang:1.19.6
+FROM abadstring/debian_ffmpeg
 
-# 设置时区
-RUN echo "Asia/Shanghai" > /etc/timezone && \
-    rm /etc/localtime && \
-    dpkg-reconfigure -f noninteractive tzdata
+ENV GIN_MODE release
 
-# 换源, 安装 ffmpeg
-RUN sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list && \
-    apt -y update && \
-    apt -y install ffmpeg
-
-
-# 拷贝源代码
-WORKDIR /go/src/douyin
-COPY src .
-
-# 设置环境变量
-ENV GO111MODULE on
-ENV CGO_ENABLED 0
-ENV GOPROXY https://goproxy.cn,direct
-
-# 下载依赖和编译
-RUN go mod tidy
-RUN go build -o /go/bin/douyin  # /go/bin 在环境变量 PATH 中
-
+# 拷贝可执行文件
+WORKDIR /go/bin
+COPY ./bin/douyin /go/bin
 
 # 挂载卷
 VOLUME ["/etc/douyin", "/var/lib/douyin"]
 
 # 运行容器时执行
-ENTRYPOINT ["douyin", "/etc/douyin/app.json"]
+ENTRYPOINT ["/go/bin/douyin", "/etc/douyin/app.json"]

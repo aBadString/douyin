@@ -1,0 +1,14 @@
+FROM golang:1.19.6
+
+# 设置环境变量
+ENV GO111MODULE on
+ENV CGO_ENABLED 0
+ENV GOPROXY https://goproxy.cn,direct
+
+WORKDIR /go/src/douyin
+
+# 挂载卷
+VOLUME ["/go/src/douyin", "/go/bin/douyin"]
+
+# 每次 run 容器时, 下载依赖和编译
+ENTRYPOINT ["/bin/bash", "compile.sh"]
