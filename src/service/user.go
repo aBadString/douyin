@@ -201,7 +201,7 @@ func UserInfo(userRequest UserInfoRequest) (User, error) {
 	user.TotalFavorited = 666
 
 	user.WorkCount = repository.CountVideoByAuthorId(user.Id)
-	user.FavoriteCount = repository.CountFavoriteByUserId(user.Id)
+	user.FavoriteCount = CountFavoriteByUserId(user.Id)
 	return user, nil
 }
 

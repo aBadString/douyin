@@ -31,7 +31,7 @@ func videoWithAuthorToVideoList(currentUserId int, videos []repository.VideoWith
 		// 1. 当前用户是否关注了该视频的作者, 是否点赞了该视频
 		isFavorite := false
 		if currentUserId != 0 {
-			isFavorite = repository.IsFavorite(currentUserId, video.Id)
+			isFavorite = IsFavorite(currentUserId, video.Id)
 		}
 
 		// 2. 重构返回数据格式
@@ -55,7 +55,11 @@ func FavoriteAction(r FavoriteActionRequest) error {
 	switch r.ActionType {
 	case 1:
 		return singleflight.DefaultGroup.Do(strconv.Itoa(r.CurrentUserId)+"favorite"+strconv.Itoa(r.VideoId), func() error {
-			if repository.CreateFavorite(r.CurrentUserId, r.VideoId) == 0 {
+			// 幂等
+			if IsFavorite(r.CurrentUserId, r.VideoId) {
+				return nil
+			}
+			if !repository.CreateFavorite(r.CurrentUserId, r.VideoId) {
 				return base.NewServerError("点赞失败")
 			}
 			return nil
@@ -63,6 +67,10 @@ func FavoriteAction(r FavoriteActionRequest) error {
 
 	case 2:
 		return singleflight.DefaultGroup.Do(strconv.Itoa(r.CurrentUserId)+"cancel_favorite"+strconv.Itoa(r.VideoId), func() error {
+			// 幂等
+			if !IsFavorite(r.CurrentUserId, r.VideoId) {
+				return nil
+			}
 			if !repository.CancelFavorite(r.CurrentUserId, r.VideoId) {
 				return base.NewServerError("取消点赞失败")
 			}
@@ -71,4 +79,12 @@ func FavoriteAction(r FavoriteActionRequest) error {
 	default:
 		return base.NewServerError("非法的action_type")
 	}
+}
+
+func IsFavorite(userId, videoId int) bool {
+	return repository.IsFavorite(userId, videoId)
+}
+
+func CountFavoriteByUserId(userId int) int {
+	return repository.CountFavoriteByUserId(userId)
 }

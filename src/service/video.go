@@ -68,7 +68,7 @@ func toVideoList(currentUserId int, videos []repository.Video) VideoList {
 		// 1. 当前用户是否关注了该视频的作者
 		isFavorite := false
 		if currentUserId != 0 {
-			isFavorite = repository.IsFavorite(currentUserId, video.Id)
+			isFavorite = IsFavorite(currentUserId, video.Id)
 		}
 
 		// 2. 获取视频作者信息
@@ -120,7 +120,7 @@ func PublishList(request PublishListRequest) VideoList {
 	for i, video := range videos {
 		isFavorite := false
 		if request.CurrentUserId != 0 {
-			isFavorite = repository.IsFavorite(request.CurrentUserId, video.Id)
+			isFavorite = IsFavorite(request.CurrentUserId, video.Id)
 		}
 
 		videoList[i] = Video{

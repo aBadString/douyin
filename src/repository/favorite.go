@@ -30,11 +30,7 @@ func GetVideoIdsByUserId(userId int) []int {
 	return videoIds
 }
 
-func CreateFavorite(userId, videoId int) int {
-
-	if IsFavorite(userId, videoId) {
-		return 0
-	}
+func CreateFavorite(userId, videoId int) bool {
 	tx := ORM.Begin()
 	defer func() {
 		if err := recover(); err != nil {
@@ -47,23 +43,20 @@ func CreateFavorite(userId, videoId int) int {
 	r = tx.Create(&fav)
 	if r.Error != nil || r.RowsAffected == 0 {
 		tx.Rollback()
-		return 0
+		return false
 	}
 	r = tx.Model(&Video{Id: videoId}).Update("favorite_count", gorm.Expr("favorite_count+?", 1))
 	if r.Error != nil || r.RowsAffected == 0 {
 		tx.Rollback()
-		return 0
+		return false
 	}
 	if tx.Commit().Error != nil {
 		tx.Rollback()
-		return 0
-	}
-	return fav.Id
-}
-func CancelFavorite(userId, videoId int) bool {
-	if !IsFavorite(userId, videoId) {
 		return false
 	}
+	return fav.Id != 0
+}
+func CancelFavorite(userId, videoId int) bool {
 	tx := ORM.Begin()
 	defer func() {
 		if err := recover(); err != nil {
