@@ -3,6 +3,7 @@ package service
 import (
 	"douyin/base"
 	"douyin/conf"
+	"douyin/redis"
 	"douyin/repository"
 	"douyin/singleflight"
 	"strconv"
@@ -19,9 +20,21 @@ type FavoriteActionRequest struct {
 	ActionType    int `query:"action_type"`
 }
 
+type FavoriteOperator interface {
+	IsFavorite(userId, videoId int) bool
+	GetVideoIdsByUserId(userId int) []int
+	CreateFavorite(userId, videoId int) bool
+	CancelFavorite(userId, videoId int) bool
+	CountFavoriteByUserId(userId int) int
+}
+
+var dbFavoriteOperator = &repository.DbFavoriteOperator{}
+var redisFavoriteOperator = &redis.RedisFavoriteOperator{}
+
 func FavoriteList(request FavoriteListRequest) VideoList {
-	videoIds := repository.GetVideoIdsByUserId(request.UserId)
-	videos := repository.GetVideoListIn(videoIds)
+	videoIdsFromRedis := redisFavoriteOperator.GetVideoIdsByUserId(request.UserId)
+	videoIdsFromDb := dbFavoriteOperator.GetVideoIdsByUserId(request.UserId)
+	videos := repository.GetVideoListIn(append(videoIdsFromDb, videoIdsFromRedis...))
 	return videoWithAuthorToVideoList(request.CurrentUserId, videos)
 }
 
@@ -59,7 +72,7 @@ func FavoriteAction(r FavoriteActionRequest) error {
 			if IsFavorite(r.CurrentUserId, r.VideoId) {
 				return nil
 			}
-			if !repository.CreateFavorite(r.CurrentUserId, r.VideoId) {
+			if !dbFavoriteOperator.CreateFavorite(r.CurrentUserId, r.VideoId) {
 				return base.NewServerError("点赞失败")
 			}
 			return nil
@@ -71,7 +84,7 @@ func FavoriteAction(r FavoriteActionRequest) error {
 			if !IsFavorite(r.CurrentUserId, r.VideoId) {
 				return nil
 			}
-			if !repository.CancelFavorite(r.CurrentUserId, r.VideoId) {
+			if !dbFavoriteOperator.CancelFavorite(r.CurrentUserId, r.VideoId) {
 				return base.NewServerError("取消点赞失败")
 			}
 			return nil
@@ -82,9 +95,22 @@ func FavoriteAction(r FavoriteActionRequest) error {
 }
 
 func IsFavorite(userId, videoId int) bool {
-	return repository.IsFavorite(userId, videoId)
+	if redisFavoriteOperator.IsFavorite(userId, videoId) {
+		return true
+	}
+	return dbFavoriteOperator.IsFavorite(userId, videoId)
 }
 
+// CountFavoriteByUserId 某个用户点赞过的视频的数量
 func CountFavoriteByUserId(userId int) int {
-	return repository.CountFavoriteByUserId(userId)
+	// 先从 redis 取
+	favoriteCount := redisFavoriteOperator.CountFavoriteByUserId(userId)
+	if favoriteCount != 0 {
+		return favoriteCount
+	}
+
+	// 没有再从数据库取, 并更新到 Redis
+	favoriteCount = dbFavoriteOperator.CountFavoriteByUserId(userId)
+	redisFavoriteOperator.SetFavoriteCountWithUserId(userId, favoriteCount)
+	return favoriteCount
 }

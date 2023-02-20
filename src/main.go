@@ -3,6 +3,7 @@ package main
 import (
 	"douyin/conf"
 	"douyin/initialize"
+	"douyin/redis"
 	"douyin/repository"
 	"os"
 	"strconv"
@@ -17,6 +18,14 @@ func main() {
 	conf.Properties = initialize.InitApplicationProperties(configFile)
 	repository.ORM = initialize.InitORM(conf.Properties.DatabaseUrl)
 	ginEngine := initialize.InitGin()
+
+	if conf.Properties.Redis.Enable {
+		redisConf := conf.Properties.Redis
+		redisClient, err := initialize.InitRedisClient(redisConf.Addr, redisConf.Password, redisConf.Db)
+		if err == nil {
+			redis.RedisClient = redisClient
+		}
+	}
 
 	port := 8080
 	if conf.Properties.Port != 0 {

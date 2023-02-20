@@ -12,7 +12,10 @@ type Favorite struct {
 	Time    time.Time
 }
 
-func IsFavorite(userId, videoId int) bool {
+type DbFavoriteOperator struct {
+}
+
+func (*DbFavoriteOperator) IsFavorite(userId, videoId int) bool {
 	var f Favorite
 	ORM.Select("id").
 		Where("user_id = ? and video_id = ?", userId, videoId).
@@ -20,7 +23,7 @@ func IsFavorite(userId, videoId int) bool {
 	return f.Id != 0
 }
 
-func GetVideoIdsByUserId(userId int) []int {
+func (*DbFavoriteOperator) GetVideoIdsByUserId(userId int) []int {
 	var videoIds []int
 	ORM.Model(&Favorite{}).
 		Select("video_id").
@@ -30,7 +33,7 @@ func GetVideoIdsByUserId(userId int) []int {
 	return videoIds
 }
 
-func CreateFavorite(userId, videoId int) bool {
+func (*DbFavoriteOperator) CreateFavorite(userId, videoId int) bool {
 	tx := ORM.Begin()
 	defer func() {
 		if err := recover(); err != nil {
@@ -56,7 +59,7 @@ func CreateFavorite(userId, videoId int) bool {
 	}
 	return fav.Id != 0
 }
-func CancelFavorite(userId, videoId int) bool {
+func (*DbFavoriteOperator) CancelFavorite(userId, videoId int) bool {
 	tx := ORM.Begin()
 	defer func() {
 		if err := recover(); err != nil {
@@ -81,7 +84,7 @@ func CancelFavorite(userId, videoId int) bool {
 	return true
 }
 
-func CountFavoriteByUserId(userId int) int {
+func (*DbFavoriteOperator) CountFavoriteByUserId(userId int) int {
 	var n int64
 	ORM.Model(&Favorite{}).Where("user_id = ?", userId).
 		Count(&n)
