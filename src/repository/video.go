@@ -24,6 +24,7 @@ func GetVideoListByAuthorId(authorId int) []Video {
 }
 
 type InsertVideoModel struct {
+	Id       int
 	AuthorId int
 	Title    string
 	Data     string
