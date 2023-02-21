@@ -36,7 +36,7 @@ func (InsertVideoModel) TableName() string {
 }
 
 func InsertVideo(video InsertVideoModel) {
-	ORM.Save(&video)
+	ORM.Create(&video)
 }
 
 type VideoWithAuthor struct {
