@@ -30,6 +30,10 @@ type InsertVideoModel struct {
 	Cover    string
 }
 
+func (InsertVideoModel) TableName() string {
+	return "video"
+}
+
 func InsertVideo(video InsertVideoModel) {
 	ORM.Save(&video)
 }
