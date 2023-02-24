@@ -1,6 +1,6 @@
 create table if not exists `user` (
     `id` int primary key auto_increment comment 'user ID',
-    `username` char(64) not null unique comment '注册用户名, 最长32个字符',
+    `username` char(64) not null unique key comment '注册用户名, 最长32个字符',
     `password` char(60) not null comment '密码, 加盐哈希后的',
     `follow_count` int default 0 comment '关注总数',
     `follower_count` int default 0 comment '粉丝总数',
